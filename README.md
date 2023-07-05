@@ -4,6 +4,8 @@ This repository uses [Evolution Gym](https://evolutiongym.github.io)
 as a base to play with evolutionary computation algorithms and other
 weirder things.
 
+![](log/20230627_ES_trial02/ES_2_248.gif)
+
 It can also be useful as a minimalist codebase to learn how to use
 evogym without having to worry about PPO and stuff.
 
