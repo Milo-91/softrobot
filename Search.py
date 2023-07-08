@@ -40,8 +40,6 @@ def main():
         robot = best_robot.copy()
         robot.mutate(size = 2)
 
-    robot = robot_m.get_random()
-
     world.set_robot(robot)
     world.reset()
     
