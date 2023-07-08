@@ -28,7 +28,10 @@ def main():
   world.reset()
 
   on_screen = options.screen
-  viewer = world.get_viewer()   # res = (w,h)
+  if options.resolution is None:
+    viewer = world.get_viewer()   # res = (w,h)
+  else:
+    viewer = world.get_viewer(res = options.resolution)
   frames = []
 
   for _step in range(options.sim_step):
@@ -64,7 +67,9 @@ render as a gif or on the display.
                     action="store_true", default = False,
                     help="Shows the animation on the screen, instead of a gif")
 
-  # TODO: Option for the resolution
+  parser.add_option("-r", "--resolution",
+                    type="int", nargs=2,
+                    help="Image Resolution")
     
   # Parser option: 
   
