@@ -9,7 +9,7 @@ from evogym import EvoWorld, EvoSim, EvoViewer, sample_robot
 
 max_step = 100
 
-world = EvoWorld.from_json(os.path.join('world_data', 
+world = EvoWorld.from_json(os.path.join('test', 
 					'test_env.json'))
 					
 robot_structure, robot_connections = sample_robot((5, 5))
@@ -69,5 +69,5 @@ for steps in range(max_step):
   img = viewer.render(mode='img')
   imgs.append(img)
 
-imageio.mimsave('test.gif', imgs, duration=(1/50.0))
+imageio.mimsave('test.gif', imgs, duration=30)
 optimize('test.gif')

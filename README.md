@@ -27,5 +27,12 @@ evogym without having to worry about PPO and stuff.
 - `TODO.md`: hell.
 - `README.md`: guess.
 
+## How to Install:
+- Create a local python 3.10 environment using pyenv or similar
+- Install evogym: `pip install evogym --upgrade`
+- Install linux dependencies (for evogym): `sudo apt install xorg-dev libglu1-mesa-dev`
+- Install python dependencies (for evogym): `pip install glfw PyOpenGL ttkbootstrap` 
+- Install python dependencies (for this repo): `pip install pygifsicle imageio`
+
 ## About
 - This repository was created by [Claus Aranha](https://scholar.social/@caranha)
