@@ -1,4 +1,4 @@
-import time, os
+import time, os, random
 import importlib, json
 from multiprocessing import Pool
 
@@ -58,9 +58,87 @@ def evaluate(robot, world, sim_step):
 
 
 def GA_search(robot_m, world, options, prefix):
-  # FIXME: TODO
-  best_robot = None
-  best_score = None
+  popsize = 20
+  mutprob = 0.3
+
+  def tournament(pop, fit, k = 2):
+    idx = random.sample(range(len(pop)), k)
+    tpop = []
+    tfit = []
+    for i in idx:
+      tpop.append(pop[i])
+      tfit.append(fit[i])
+
+    maxidx = tfit.index(max(tfit))
+
+    return tpop[maxidx]
+
+  # Initial population
+  population = []
+  rep = popsize
+
+  for _ in range(popsize):
+    r = robot_m.get_random()
+    population.append(r)
+
+  evalpars = []
+  for ind in population:
+    evalpars.append((ind, world, options.sim_step))
+
+  with Pool(options.numprocs) as p:
+    scores = p.starmap(evaluate, evalpars)
+
+  fitness = [s[0] for s in scores]
+  meantime = [s[1] for s in scores]
+
+  best_index = fitness.index(max(fitness))
+  best_score = scores[best_index][0]
+  best_robot = evalpars[best_index][0]
+  print(f"New best score at evaluation {rep}: {best_score}")
+  best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
+
+  while rep < options.evo_step:
+    newpop = []
+    rep += popsize
+
+    for _ in range(popsize):
+      p1 = tournament(population, fitness, k = 2)
+      p2 = tournament(population, fitness, k = 2)
+      offspring = p1.crossover(p2)
+      if random.random() < mutprob:
+        offspring.mutate()
+      newpop.append(offspring)
+
+    population = newpop 
+
+    evalpars = []
+    for ind in population:
+      evalpars.append((ind, world, options.sim_step))
+
+    with Pool(options.numprocs) as p:
+      scores = p.starmap(evaluate, evalpars)
+
+    fitness = [s[0] for s in scores]
+    for s in scores:
+      meantime.append(s[1])
+
+    best_index = fitness.index(max(fitness))
+
+    if best_score < scores[best_index][0]:
+      best_score = scores[best_index][0]
+      best_robot = evalpars[best_index][0]
+      print(f"New best score at evaluation {rep}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
+
+  return meantime
+
+
+
+
+
+
+
+
 
 
 def ES_search(robot_m, world, options, prefix):

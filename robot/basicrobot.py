@@ -77,3 +77,31 @@ class SinRobot:
                 count += 1
                 if count > 5000:
                     raise Exception("Can't find a valid mutation after 5000 tries!")
+                
+    def crossover(self, mate):
+        count = 0
+
+        while True:
+            count += 1
+            child1 = self.copy()
+            child2 = self.copy()
+
+            pos = np.random.randint(0,4)
+
+            for i in range(5):
+                if i > pos:
+                    for j in range(5):
+                        child1.shape[(i,j)] = self.shape[(i,j)]
+                        child2.shape[(i,j)] = mate.shape[(i,j)]
+                else:
+                    for j in range(5):
+                        child1.shape[(i,j)] = mate.shape[(i,j)]
+                        child2.shape[(i,j)] = self.shape[(i,j)]
+
+            if child1.valid():
+                return child1
+            if child2.valid():
+                return child2
+
+            if count > 5000:
+                return self.copy()

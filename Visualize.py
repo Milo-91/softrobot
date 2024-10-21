@@ -46,6 +46,8 @@ def main():
     imageio.mimsave(options.filename, frames, duration=30)
     optimize(options.filename)
 
+  print(f"Score: {world.get_score()}")
+
 def parse_args():
   usage = "usage: %prog [options] <world file> <robot file>"
   desc = """Render a specific robot working on a specific world. Display the
