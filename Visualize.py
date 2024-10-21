@@ -43,7 +43,7 @@ def main():
       frames.append(viewer.render(mode="img"))
 
   if not on_screen:
-    imageio.mimsave(options.filename, frames, duration=(1/50.0))
+    imageio.mimsave(options.filename, frames, duration=30)
     optimize(options.filename)
 
 def parse_args():

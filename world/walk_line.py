@@ -74,6 +74,10 @@ class LineWorld():
         self.sim = EvoSim(self.world)
         self.sim.reset()
 
+    def restart(self):
+        self.load_json(self.world_file)
+        self.sim = None
+
     def clear_robot(self):
         self.robot = None
         self.world.remove_object("robot")
