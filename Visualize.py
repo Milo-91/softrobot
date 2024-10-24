@@ -43,7 +43,7 @@ def main():
       frames.append(viewer.render(mode="img"))
 
   if not on_screen:
-    imageio.mimsave(options.filename, frames, duration=30)
+    imageio.mimsave(options.filename, frames, duration=20)
     optimize(options.filename)
 
   print(f"Score: {world.get_score()}")

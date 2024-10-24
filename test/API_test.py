@@ -9,9 +9,8 @@ from evogym import EvoWorld, EvoSim, EvoViewer, sample_robot
 
 max_step = 100
 
-world = EvoWorld.from_json(os.path.join('test', 
-					'test_env.json'))
-					
+world = EvoWorld.from_json('test_env.json')
+
 robot_structure, robot_connections = sample_robot((5, 5))
 
 # print(robot_structure)
@@ -49,7 +48,7 @@ imgs = []
 def action_unif(size, steps):
   return np.random.uniform(
            low = 0.6,
-           high = 1.6, 
+           high = 1.6,
            size = (size,)
   	 )
 

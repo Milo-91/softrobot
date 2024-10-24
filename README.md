@@ -10,29 +10,32 @@ It can also be useful as a minimalist codebase to learn how to use
 evogym without having to worry about PPO and stuff.
 
 ## Files
-- `API_test.py`: a playground testing some features of the Evogym API.
-- `Search.py`: performs random search or ES based on one robot class
-  and one world class.
-- `Visualize.py`: shows one robot and one world on the screen (or
-  generates a gif)
-- `robot/`: a directory containing objects that generate and manipulate
-  robots in different ways.
-- `robot/simplerobot.py`: generates a robot by random sample, and uses
-  a simple sine wave controler on that robot.
-- `world/`: a directory containing objects that generate and manipulate
-  worlds in different ways.
-- `world/walk_line`: generates a world that evaluates one robot on how
-  far it can walk. The world is a straight line with random rectangular
-  obstacles.
+- `test/`: contains a script to test if your Evogym installation is working
+
+- `docs/`: contains some documentation to learn about Evolutionary Computation
+
+- `Search.py`: uses simple search algorithms to optimize the robot body 
+for a given task. Random Search, GA and ES are implemented. Use `python 
+Search.py -h` for options.
+
+- `Visualize.py`: Visualizes the result of one robot running on one 
+world file (note: it does not need to be the same ones that ran together 
+originally!). Use `python Visualize -h` for options.
+
+- `robot/`: Contains objects implementing evolving robots.
+
+- `world/`: COntains objects implementing worlds and tasks.
+
 - `TODO.md`: hell.
+
 - `README.md`: guess.
 
 ## How to Install:
 - Create a local python 3.10 environment using pyenv or similar
-- Install evogym: `pip install evogym --upgrade`
+- Install evogym: `pip install evogym --upgrade` (See evogym repository for details)
 - Install linux dependencies (for evogym): `sudo apt install xorg-dev libglu1-mesa-dev`
 - Install python dependencies (for evogym): `pip install glfw PyOpenGL ttkbootstrap` 
 - Install python dependencies (for this repo): `pip install pygifsicle imageio`
 
 ## About
-- This repository was created by [Claus Aranha](https://scholar.social/@caranha)
+- This repository was created by [Claus Aranha](https://conclave.cs.tsukuba.ac.jp)
