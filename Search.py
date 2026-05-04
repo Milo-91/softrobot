@@ -1,6 +1,7 @@
 import time, os, random
 import importlib, json
 from multiprocessing import Pool
+import numpy as np
 
 from optparse import OptionParser
 
@@ -184,6 +185,7 @@ def random_search(robot_m, world, options, prefix):
   best_robot = None
   best_score = None
 
+
   rep = 0
   meantime = []
 
@@ -200,6 +202,7 @@ def random_search(robot_m, world, options, prefix):
     for _ in scores:
       meantime.append(_[1])
 
+    # print(paramlist)
     # print(f"Mean sim time at {rep}: {mean(meantime)}")
 
 
@@ -213,6 +216,93 @@ def random_search(robot_m, world, options, prefix):
 
   return meantime
 
+
+def random_opt_search(robot_m, world, options, prefix):
+  best_robot = None
+  best_score = None
+  '''
+  base_robot = np.array([
+    [1, -1, 1, -1, -1],
+    [-1, 3, 3, -1, -1],
+    [2, 4, -1, -1, -1],
+    [3, 4, 4, 2, 1],
+    [-1, 3, 1, -1, -1]
+  ])
+  '''
+  base_robot = None
+
+  rep = 0
+  meantime = []
+  top_k = []
+  hun_count = 0
+  k = 10
+  threshold = 6
+
+  while rep < options.evo_step:  
+    paramlist = []
+    numprocs = options.numprocs
+    if options.numprocs > (100 - hun_count):
+      numprocs = 100 - hun_count
+    for _ in range(numprocs):
+      paramlist.append((robot_m.get_random(base_robot), world, options.sim_step))
+
+    with Pool(numprocs) as p:
+      scores = p.starmap(evaluate, paramlist)
+
+    rep += numprocs
+    hun_count += numprocs
+
+
+    for _ in scores:
+      meantime.append(_[1])
+
+    temp_robot = [(paramlist[i][0], scores[i][0]) for i in range(numprocs)]
+    top_k.extend(temp_robot)
+    top_k.sort(key=lambda x: x[-1], reverse=True)
+    top_k = top_k[:k]
+
+    # print(f"socres\n{scores}")
+    # print(f"meantime\n{meantime}")
+    # print(f"top_{k}\n{top_k}")
+    # print(f"Mean sim time at {rep}: {mean(meantime)}")
+
+
+    if hun_count == 100:
+      temp_arr = np.stack([r[0].shape for r in top_k], axis=0)
+      H, W = temp_arr.shape[1:]
+      base_robot = np.full((H, W), -1)
+      for i in range(H):
+        for j in range(W):
+          arr = [(temp_arr[:, i, j] == n).sum() for n in range(5)]
+          for l in range(5):
+            if arr[l] >= threshold:
+              base_robot[i][j] = l
+
+      hun_count = 0
+      print(base_robot)
+      # store base_robot
+      with open(f'{prefix}_base_robit.txt', "a") as out_f:
+        s = np.array2string(
+          base_robot,
+        )
+        out_f.write(s + '\n')
+
+      count = 0
+      for r in top_k:
+        count += 1
+        r[0].save_json(f"{prefix}_robot_{rep:04}_{count}.json")
+
+    
+    '''
+    best_index = scores.index(max(scores))
+    if (best_robot is None or best_score < scores[best_index][0]):
+      best_score = scores[best_index][0]
+      best_robot = paramlist[best_index][0]
+      print(f"New best score at evaluation {rep}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{rep:05}.json")
+    '''
+
+  return meantime
 
 def main():
   options, args = parse_args()
@@ -245,6 +335,7 @@ def main():
   # Running the optimization
   algorithms = {
     "random": random_search,
+    "random_opt": random_opt_search,
     "ES": ES_search,
     "GA": GA_search,
   }
@@ -273,7 +364,7 @@ score.
                     type="int", action="store",
                     help="Number of Evaluations. Default 400.")
 
-  algorithms = ["random", "ES", "GA"]
+  algorithms = ["random", "random_opt", "ES", "GA"]
   parser.add_option("-A", "--search_algorithm",
                     type = "choice", choices = algorithms,
                     default = algorithms[0],
