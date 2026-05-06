@@ -218,17 +218,6 @@ def random_search(robot_m, world, options, prefix):
 
 
 def random_opt_search(robot_m, world, options, prefix):
-  best_robot = None
-  best_score = None
-  '''
-  base_robot = np.array([
-    [1, -1, 1, -1, -1],
-    [-1, 3, 3, -1, -1],
-    [2, 4, -1, -1, -1],
-    [3, 4, 4, 2, 1],
-    [-1, 3, 1, -1, -1]
-  ])
-  '''
   base_robot = None
 
   rep = 0
@@ -291,16 +280,6 @@ def random_opt_search(robot_m, world, options, prefix):
       for r in top_k:
         count += 1
         r[0].save_json(f"{prefix}_robot_{rep:04}_{count}.json")
-
-    
-    '''
-    best_index = scores.index(max(scores))
-    if (best_robot is None or best_score < scores[best_index][0]):
-      best_score = scores[best_index][0]
-      best_robot = paramlist[best_index][0]
-      print(f"New best score at evaluation {rep}: {best_score}")
-      best_robot.save_json(f"{prefix}_robot_{rep:05}.json")
-    '''
 
   return meantime
 
