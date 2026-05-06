@@ -1,90 +1,111 @@
-# It all from EvoWorld
+# Transform evogym json file to YARSE json file
 
-def add_from_array(
-    self, 
-    name: str, 
-    structure: np.ndarray, 
-    x: int, 
-    y: int, 
-    connections: Optional[np.ndarray] = None) -> None:
-    """
-    Add a single object to the world from array.
+import json
+import numpy as np
+from typing import Any, List, Dict, Optional
 
-    Args:
-        name (str): object name.
-        structure (np.ndarray): `(n, m)` array specifing the voxel structure of the object. See `evogym.VOXEL_TYPES`. 
-        x (int): x-position of the bottom & leftmost voxel of the object. Starts at `0`.
-        y (int): y-position of the bottom & leftmost voxel of the object. Starts at `0`.
-        connections (Optional[np.ndarray]): `(2, k)` array specifying `k` pairwise voxel connections. Voxels are specified by their index into the 1D array `np.flatten(structure)`. The default behavior assumes all adjacent voxels are connected. (default = None)
-    """
-    new_obj = WorldObject.from_array(name, structure, connections)
-    new_obj.set_pos(x, y)
-    self.add_object(new_obj)
 
-def load_from_parsed_json(self, name: str, json_data: Any, grid_size: Pair) -> None:
-    """
-    Load object from parsed `json` data. It is recommended to use `WorldObject.load_from_json()` instead.
+def add_from_json(file_path: str):
+    with open(file_path, 'r') as infile:
+        state = json.load(infile)
 
-    Args:
-        name (str): object name.
-        json_data (Any): parsed json data.
-        grid_size (Pair): grid size of world object is loaded from.
-    """
-    self.name = name
+    file_grid_size = (state['grid_width'], state['grid_height'])
 
+    # read in objects
+    for name, obj_data in state['objects'].items():
+
+        # assert lists of same length
+        if not len(obj_data['indices']) == len(obj_data['types']):
+            raise ValueError(
+                f'cannot read in file {file_path} with corrupted object {name}'
+            )
+        if not len(obj_data['indices']) == len(obj_data['neighbors']):
+            raise ValueError(
+                f'cannot read in file {file_path} with corrupted object {name}'
+            )
+
+        array = load_from_parsed_json(obj_data, file_grid_size)
+        return array
+
+
+def load_from_parsed_json(json_data: Any, grid_size):
     # read in indices
     voxels = []
     index_to_voxel = {}
     num_voxels = len(json_data['indices'])
     for i in range(num_voxels):
         index_curr = json_data['indices'][i]
-        voxels.append(
-            Pair(index_curr % grid_size.x, index_curr // grid_size.x))
-        index_to_voxel[index_curr] = voxels[-1].copy()
+        voxels.append((index_curr % grid_size[0], index_curr // grid_size[0]))
+        index_to_voxel[index_curr] = voxels[-1]
 
     if len(voxels) == 0:
-        raise ValueError(f'object {self.name} has no voxels')
+        raise ValueError(f'object has no voxels')
 
     #compute bounding box
-    max_voxel = voxels[0].copy()
-    min_voxel = voxels[0].copy()
+    max_voxel = voxels[0]
+    min_voxel = voxels[0]
 
     for voxel in voxels:
-        max_voxel = max_voxel.each_max(voxel)
-        min_voxel = min_voxel.each_min(voxel)
+        max_voxel = (max(max_voxel[0], voxel[0]), max(max_voxel[1], voxel[1]))
+        min_voxel = (min(min_voxel[0], voxel[0]), min(min_voxel[1], voxel[1]))
+
+    print(f'max voxel: {max_voxel}')
+    print(f'min voxel: {min_voxel}')
 
     # translate voxels according to bounding box
-    self.pos = min_voxel.copy()
-    self.grid_size = max_voxel - min_voxel + Pair(1, 1)
+    pos = min_voxel
+    grid_size = (max_voxel[0] - min_voxel[0] + 1, max_voxel[1] - min_voxel[1] + 1)
 
-    self.voxels = []
+    selfvoxels = []
     for voxel in voxels:
-        self.voxels.append(voxel - self.pos)
+        selfvoxels.append((voxel[0] - pos[0], voxel[1] - pos[1]))
+        print(f'selfvoxel: {(voxel[0] - pos[0], voxel[1] - pos[1])}')
 
     for index in index_to_voxel.keys():
-        index_to_voxel[index] = index_to_voxel[index] - self.pos
+        index_to_voxel[index] = (index_to_voxel[index][0] - pos[0], index_to_voxel[index][1] - pos[1])
 
     # set grid and neighbors
+    print(f'grid size: x: {grid_size[0]}, y: {grid_size[1]}')
     grid: List[List[int]] = []
-    for y in range(self.grid_size.y):
+    for y in range(grid_size[1]):
         grid.append([])
-        for x in range(self.grid_size.x):
+        for x in range(grid_size[0]):
             grid[-1].append(0)
 
-    self.neighbors = {}
-    for voxel in self.voxels:
-        self.neighbors[voxel] = []
+    neighbors = {}
+    for voxel in selfvoxels:
+        neighbors[voxel] = []
 
     for i in range(num_voxels):
         index_curr = json_data['indices'][i]
         voxel_curr = index_to_voxel[index_curr]
-        grid[voxel_curr.y][voxel_curr.x] = json_data['types'][i]
+        print(f'voxel_curr: x: {voxel_curr[0]}, y: {voxel_curr[0]}')
+        grid[voxel_curr[1]][voxel_curr[0]] = json_data['types'][i]
         for nei in json_data['neighbors'][f'{index_curr}']:
             if not nei in index_to_voxel:
                 raise ValueError(
-                    f'object {self.name} has voxels with invalid neighbors'
+                    f'object has voxels with invalid neighbors'
                 )
             nei_voxel = index_to_voxel[nei]
-            self.neighbors[voxel_curr].append(nei_voxel)
+            neighbors[voxel_curr].append(nei_voxel)
 
-    self.grid = np.array(grid)
+   
+    return np.array(grid)
+
+
+def save_json(class_name, filename, grid):
+    with open(filename, "w") as out_f:
+        data = {"class": class_name,
+                "floor": np.flip(grid, axis = 0).tolist()
+            }
+        json.dump(data,
+                  out_f,
+                  separators = (',', ':'))
+
+def main():
+    grid = add_from_json('/Users/linchecheng/Desktop/上課用/大五下/TsukubaResearch/YASRE/log/evogym_world/sim_files/Climber-v0.json')
+    save_json('world.climb', 'Climber-v0T.json', grid)
+
+if __name__ == '__main__':
+    main()
+    
