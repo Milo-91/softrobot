@@ -43,7 +43,7 @@ class SinRobot:
         count = 0;
         while True:
             self.shape = np.random.randint(0,5,(w,h))
-            print(self.shape)
+            # print(self.shape)
             if self.valid():
                 break
             count += 1
