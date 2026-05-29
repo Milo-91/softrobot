@@ -1,9 +1,11 @@
 import time, os, random
-import importlib, json
-from multiprocessing import Pool
+import importlib, json, csv
+from multiprocessing import Pool, Value
 import numpy as np
 
 from optparse import OptionParser
+
+counter = None
 
 class suppress_stdout_stderr(object):
     '''
@@ -37,7 +39,13 @@ def mean(l):
   return sum(l)/len(l)
 
 
-def evaluate(robot, world, sim_step):
+def evaluate(robot, world, sim_step, evo_step):
+  # set max evo step
+  if counter.value >= evo_step:
+    return 0, 0
+  with counter.get_lock():
+    counter.value += 1
+
   stime = time.time()
   world.restart()
   world.set_robot(robot)
@@ -61,6 +69,7 @@ def evaluate(robot, world, sim_step):
 def GA_search(robot_m, world, options, prefix):
   popsize = 20
   mutprob = 0.3
+  eval_count = Value('i', 0)
 
   def tournament(pop, fit, k = 2):
     idx = random.sample(range(len(pop)), k)
@@ -84,9 +93,9 @@ def GA_search(robot_m, world, options, prefix):
 
   evalpars = []
   for ind in population:
-    evalpars.append((ind, world, options.sim_step))
+    evalpars.append((ind, world, options.sim_step, options.evo_step))
 
-  with Pool(options.numprocs) as p:
+  with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
     scores = p.starmap(evaluate, evalpars)
 
   fitness = [s[0] for s in scores]
@@ -95,10 +104,13 @@ def GA_search(robot_m, world, options, prefix):
   best_index = fitness.index(max(fitness))
   best_score = scores[best_index][0]
   best_robot = evalpars[best_index][0]
-  print(f"New best score at evaluation {rep}: {best_score}")
-  best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
+  print(f"New best score at evaluation {eval_count.value}: {best_score}")
+  best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
+  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count.value, best_score])
 
-  while rep < options.evo_step:
+  while eval_count.value < options.evo_step:
     newpop = []
     rep += popsize
 
@@ -114,9 +126,9 @@ def GA_search(robot_m, world, options, prefix):
 
     evalpars = []
     for ind in population:
-      evalpars.append((ind, world, options.sim_step))
+      evalpars.append((ind, world, options.sim_step, options.evo_step))
 
-    with Pool(options.numprocs) as p:
+    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
       scores = p.starmap(evaluate, evalpars)
 
     fitness = [s[0] for s in scores]
@@ -128,9 +140,16 @@ def GA_search(robot_m, world, options, prefix):
     if best_score < scores[best_index][0]:
       best_score = scores[best_index][0]
       best_robot = evalpars[best_index][0]
-      print(f"New best score at evaluation {rep}: {best_score}")
-      best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
+      print(f"New best score at evaluation {eval_count.value}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
+      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([eval_count.value, best_score])
 
+  print(f'eval_count = {eval_count.value}')
+  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count.value, best_score])
   return meantime
 
 
@@ -283,14 +302,157 @@ def random_opt_search(robot_m, world, options, prefix):
 
   return meantime
 
+
+def hill_climbing(pop, score, max_iterations, world, sim_step, evo_step):
+  best_score = score
+  mean_time = []
+  print('local search')
+  for _ in range(max_iterations):
+    new_pop = pop.copy()
+    new_pop.mutate()
+    new_score, sim_time = evaluate(new_pop, world, sim_step, evo_step)
+    mean_time.append(sim_time)
+    if new_score > best_score:
+      pop = new_pop
+      best_score = new_score
+  
+  return best_score, mean_time
+
+def mulpro_init(args):
+  global counter
+  counter = args
+
+def MA_search(robot_m, world, options, prefix):
+  # GA + hill climbing
+  popsize = 20
+  mutprob = 0.3
+  max_iterations = 5
+
+  eval_count = Value('i', 0)
+
+  def tournament(pop, fit, k = 2):
+    idx = random.sample(range(len(pop)), k)
+    tpop = []
+    tfit = []
+    for i in idx:
+      tpop.append(pop[i])
+      tfit.append(fit[i])
+
+    maxidx = tfit.index(max(tfit))
+
+    return tpop[maxidx]
+
+  # Initial population
+  population = []
+  rep = popsize
+
+  for _ in range(popsize):
+    r = robot_m.get_random()
+    population.append(r)
+
+  evalpars = []
+  for ind in population:
+    evalpars.append((ind, world, options.sim_step, options.evo_step))
+
+  with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
+    scores = p.starmap(evaluate, evalpars)
+
+  fitness = [s[0] for s in scores]
+  meantime = [s[1] for s in scores]
+
+  best_index = fitness.index(max(fitness))
+  best_score = scores[best_index][0]
+  best_robot = evalpars[best_index][0]
+  print(f"New best score at evaluation {eval_count.value}: {best_score}")
+  best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count.value, best_score])
+
+  while eval_count.value < options.evo_step:
+    newpop = []
+    rep += popsize
+
+    for _ in range(popsize):
+      p1 = tournament(population, fitness, k = 2)
+      p2 = tournament(population, fitness, k = 2)
+      offspring = p1.crossover(p2)
+      if random.random() < mutprob:
+        offspring.mutate()
+      newpop.append(offspring)
+
+    population = newpop
+
+    evalpars = []
+    for ind in population:
+      evalpars.append((ind, world, options.sim_step, options.evo_step))
+
+    rep += popsize * 5
+    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
+      scores = p.starmap(evaluate, evalpars)
+
+    fitness = [s[0] for s in scores]
+    for s in scores:
+      meantime.append(s[1])
+
+    best_index = fitness.index(max(fitness))
+
+    if best_score < scores[best_index][0]:
+      best_score = scores[best_index][0]
+      best_robot = evalpars[best_index][0]
+      print(f"New best score at evaluation {eval_count.value}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([eval_count.value, best_score])
+
+    # local search (hill climbing)
+    parameters = []
+    for i in range(len(newpop)):
+      parameters.append([newpop[i], fitness[i], max_iterations, world, options.sim_step, options.evo_step])
+
+    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
+      scores = p.starmap(hill_climbing, parameters)
+
+    fitness = [s[0] for s in scores]
+    for s in scores:
+      meantime += s[1]
+
+    best_index = fitness.index(max(fitness))
+
+    if best_score < scores[best_index][0]:
+      best_score = scores[best_index][0]
+      best_robot = evalpars[best_index][0]
+      print(f"New best score at evaluation {rep}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{rep:05}.json")
+      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([eval_count.value, best_score])
+
+  print(f'eval_count = {eval_count.value}')
+  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count.value, best_score])
+
+  return meantime
+
+
+
+
 def main():
   options, args = parse_args()
 
   if not os.path.exists(options.logdir):
     os.mkdir(options.logdir)
 
+
   today  = time.strftime("%m%d%H%M")
   prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{today}"
+
+  # csv record file
+  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['eval_count', 'score'])
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):
@@ -317,6 +479,7 @@ def main():
     "random_opt": random_opt_search,
     "ES": ES_search,
     "GA": GA_search,
+    "MA": MA_search,
   }
 
   simtime = algorithms[options.search_algorithm](robot_m, world, options, prefix)
@@ -343,7 +506,7 @@ score.
                     type="int", action="store",
                     help="Number of Evaluations. Default 400.")
 
-  algorithms = ["random", "random_opt", "ES", "GA"]
+  algorithms = ["random", "random_opt", "ES", "GA", "MA"]
   parser.add_option("-A", "--search_algorithm",
                     type = "choice", choices = algorithms,
                     default = algorithms[0],
