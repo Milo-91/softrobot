@@ -106,7 +106,7 @@ def GA_search(robot_m, world, options, prefix):
   best_robot = evalpars[best_index][0]
   print(f"New best score at evaluation {eval_count.value}: {best_score}")
   best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
-  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow([eval_count.value, best_score])
 
@@ -142,12 +142,12 @@ def GA_search(robot_m, world, options, prefix):
       best_robot = evalpars[best_index][0]
       print(f"New best score at evaluation {eval_count.value}: {best_score}")
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
-      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+      with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([eval_count.value, best_score])
 
   print(f'eval_count = {eval_count.value}')
-  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow([eval_count.value, best_score])
   return meantime
@@ -164,21 +164,23 @@ def GA_search(robot_m, world, options, prefix):
 def ES_search(robot_m, world, options, prefix):
   # 1+lambda ES: Get the best robot out of 5 mutations with elitism
   offspring = 5 # lambda
+  eval_count = Value('i', 0)
 
   best_robot = robot_m.get_random()
-  best_score = evaluate(best_robot, world, options.sim_step)[0]
+  mulpro_init(eval_count)
+  best_score = evaluate(best_robot, world, options.sim_step, options.evo_step)[0]
   rep = 1
 
   meantime = []
 
-  while rep < options.evo_step:
+  while eval_count.value < options.evo_step:
     paramlist = []
     for _ in range(offspring):
       newrobot = best_robot.copy()
       newrobot.mutate(2)
-      paramlist.append((newrobot, world, options.sim_step))
+      paramlist.append((newrobot, world, options.sim_step, options.evo_step))
 
-    with Pool(options.numprocs) as p:
+    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
       scores = p.starmap(evaluate, paramlist)
 
     rep += offspring
@@ -196,7 +198,14 @@ def ES_search(robot_m, world, options, prefix):
       best_robot = paramlist[best_index][0]
       print(f"New best score at evaluation {rep}: {best_score}")
       best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
+      with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([eval_count.value, best_score])
 
+  print(f'eval_count = {eval_count.value}')
+  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count.value, best_score])
   return meantime
 
 
@@ -303,18 +312,20 @@ def random_opt_search(robot_m, world, options, prefix):
   return meantime
 
 
-def hill_climbing(pop, score, max_iterations, world, sim_step, evo_step):
+def hill_climbing(pop, score, max_iterations, world, sim_step, evo_step, prefix):
   best_score = score
   mean_time = []
-  print('local search')
+  # print('local search')
   for _ in range(max_iterations):
     new_pop = pop.copy()
     new_pop.mutate()
+    new_pop.save_txt('hill new_pop', f'{prefix}_evolve.txt')
     new_score, sim_time = evaluate(new_pop, world, sim_step, evo_step)
     mean_time.append(sim_time)
     if new_score > best_score:
       pop = new_pop
       best_score = new_score
+      new_pop.save_txt('hill best robot', f'{prefix}_evolve.txt')
   
   return best_score, mean_time
 
@@ -326,7 +337,7 @@ def MA_search(robot_m, world, options, prefix):
   # GA + hill climbing
   popsize = 20
   mutprob = 0.3
-  max_iterations = 5
+  max_iterations = 3
 
   eval_count = Value('i', 0)
 
@@ -344,11 +355,12 @@ def MA_search(robot_m, world, options, prefix):
 
   # Initial population
   population = []
-  rep = popsize
 
   for _ in range(popsize):
     r = robot_m.get_random()
     population.append(r)
+    r.save_txt('initial', f'{prefix}_evolve.txt')
+
 
   evalpars = []
   for ind in population:
@@ -365,20 +377,23 @@ def MA_search(robot_m, world, options, prefix):
   best_robot = evalpars[best_index][0]
   print(f"New best score at evaluation {eval_count.value}: {best_score}")
   best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow([eval_count.value, best_score])
 
   while eval_count.value < options.evo_step:
     newpop = []
-    rep += popsize
 
     for _ in range(popsize):
       p1 = tournament(population, fitness, k = 2)
       p2 = tournament(population, fitness, k = 2)
+      p1.save_txt('parent1', f'{prefix}_evolve.txt')
+      p2.save_txt('parent2', f'{prefix}_evolve.txt')
       offspring = p1.crossover(p2)
+      offspring.save_txt('after crossover', f'{prefix}_evolve.txt')
       if random.random() < mutprob:
         offspring.mutate()
+        offspring.save_txt('after mutation', f'{prefix}_evolve.txt')
       newpop.append(offspring)
 
     population = newpop
@@ -387,7 +402,6 @@ def MA_search(robot_m, world, options, prefix):
     for ind in population:
       evalpars.append((ind, world, options.sim_step, options.evo_step))
 
-    rep += popsize * 5
     with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
       scores = p.starmap(evaluate, evalpars)
 
@@ -402,14 +416,14 @@ def MA_search(robot_m, world, options, prefix):
       best_robot = evalpars[best_index][0]
       print(f"New best score at evaluation {eval_count.value}: {best_score}")
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+      with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([eval_count.value, best_score])
 
     # local search (hill climbing)
     parameters = []
     for i in range(len(newpop)):
-      parameters.append([newpop[i], fitness[i], max_iterations, world, options.sim_step, options.evo_step])
+      parameters.append([newpop[i], fitness[i], max_iterations, world, options.sim_step, options.evo_step, prefix])
 
     with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
       scores = p.starmap(hill_climbing, parameters)
@@ -423,14 +437,14 @@ def MA_search(robot_m, world, options, prefix):
     if best_score < scores[best_index][0]:
       best_score = scores[best_index][0]
       best_robot = evalpars[best_index][0]
-      print(f"New best score at evaluation {rep}: {best_score}")
-      best_robot.save_json(f"{prefix}_robot_{rep:05}.json")
-      with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+      print(f"New best score at evaluation {eval_count.value}: {best_score}")
+      best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+      with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([eval_count.value, best_score])
 
   print(f'eval_count = {eval_count.value}')
-  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'a', newline='') as f:
+  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
     writer = csv.writer(f)
     writer.writerow([eval_count.value, best_score])
 
@@ -450,9 +464,12 @@ def main():
   prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{today}"
 
   # csv record file
-  with open(f'{prefix}_{options.search_algorithm}_best_record.csv', 'w', newline='') as f:
+  with open(f'{prefix}_best_record.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(['eval_count', 'score'])
+  # debug file
+  with open(f'{prefix}_evolve.txt', 'w') as f:
+    print('evolve', file=f)
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):

@@ -27,6 +27,12 @@ class SinRobot:
                       out_f,
                       separators = (',', ':'))
 
+    def save_txt(self, comment, filename):
+        with open(filename, 'a') as f:
+            print(comment, file=f)
+            print(*(self.shape.tolist()), sep='\n', file=f)
+            print('\n', file=f)
+
     def load_json(self, filename):
         with open(filename, "r") as in_f:
             rdata = json.loads(in_f.read())
