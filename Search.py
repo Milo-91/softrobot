@@ -67,7 +67,7 @@ def evaluate(robot, world, sim_step, evo_step):
 
 
 def GA_search(robot_m, world, options, prefix):
-  popsize = 20
+  popsize = 200
   mutprob = 0.3
   eval_count = Value('i', 0)
 
