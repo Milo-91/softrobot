@@ -1,5 +1,6 @@
 import importlib, csv, random
 from multiprocessing import Pool, Manager
+import numpy as np
 
 
 def tournament(pop, fit, k = 2):
@@ -15,8 +16,11 @@ def tournament(pop, fit, k = 2):
   return tpop[maxidx]
 
 def Search(robot_m, world, options, prefix, evaluator, local_search):
-  popsize = 20
+  popsize = options.popsize
+  elites_percentage = 0.1
   mutprob = 0.3
+  with open(f'{prefix}_evolve.txt', 'a') as f:
+    print(f'local search algorithm: {options.local_search_algorithm}\npopsize: {popsize}\nevo_step: {options.evo_step}\n', file=f)
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
@@ -52,7 +56,7 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
   
     while eval_count.value < options.evo_step:
       newpop = []
-  
+      print(f'popsize: {len(population)}')
       for _ in range(popsize):
         p1 = tournament(population, fitness, k = 2)
         p2 = tournament(population, fitness, k = 2)
@@ -89,28 +93,34 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
           writer = csv.writer(f)
           writer.writerow([eval_count.value, best_score])
   
-      # local search (hill climbing)
-      parameters = []
-      for i in range(len(newpop)):
-        parameters.append((newpop[i], fitness[i], prefix, eval_count, lock))
+      if local_search != None:
+        # sort offsprings
+        elites_indices = np.argsort(fitness)[::-1]
+        # local search
+        parameters = []
+        for i in elites_indices[:int(popsize*elites_percentage)]:
+          parameters.append((population[i], fitness[i], prefix, eval_count, lock))
   
-      with Pool(options.numprocs) as p:
-        scores = p.starmap(local_search.Search, parameters)
+        with Pool(options.numprocs) as p:
+          scores = p.starmap(local_search.Search, parameters)
   
-      fitness = [s[0] for s in scores]
-      for s in scores:
-        meantime += s[1]
+        elites_fitness = [s[0] for s in scores]
+        for s in scores:
+          meantime += s[1]
   
-      best_index = fitness.index(max(fitness))
+        best_index = elites_fitness.index(max(elites_fitness))
   
-      if best_score < scores[best_index][0]:
-        best_score = scores[best_index][0]
-        best_robot = evalpars[best_index][0]
-        print(f"New best score at evaluation {eval_count.value}: {best_score}")
-        best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-        with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-          writer = csv.writer(f)
-          writer.writerow([eval_count.value, best_score])
+        if best_score < scores[best_index][0]:
+          best_score = scores[best_index][0]
+          best_robot = evalpars[best_index][0]
+          print(f"New best score at evaluation {eval_count.value}: {best_score}")
+          best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+          with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([eval_count.value, best_score])
+
+        for i in range(len(elites_fitness)):
+          fitness[elites_indices[i]] = elites_fitness[i]
 
     print(f'eval_count: {eval_count.value}')
     with open(f'{prefix}_best_record.csv', 'a', newline='') as f:

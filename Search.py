@@ -1,10 +1,9 @@
 import time, os, random
 import importlib, json, csv
-from multiprocessing import Pool, Value
+from multiprocessing import Pool, Value, Manager
 import numpy as np
 import EC_algorithms as EC
 from evaluation.evaluate import Evaluator
-from EC_algorithms.local_search.hill_climbing import HillClimbing
 
 from optparse import OptionParser
 
@@ -41,7 +40,7 @@ class suppress_stdout_stderr(object):
 def mean(l):
   return sum(l)/len(l)
 
-'''
+
 def evaluate(robot, world, sim_step, evo_step):
   # set max evo step
   if counter.value >= evo_step:
@@ -67,92 +66,142 @@ def evaluate(robot, world, sim_step, evo_step):
   etime = time.time()
 
   return score, (etime - stime)
-'''
+
+
+def tournament(pop, fit, k = 2):
+  idx = random.sample(range(len(pop)), k)
+  tpop = []
+  tfit = []
+  for i in idx:
+    tpop.append(pop[i])
+    tfit.append(fit[i])
+
+  maxidx = tfit.index(max(tfit))
+
+  return tpop[maxidx]
+
 
 def GA_search(robot_m, world, options, prefix):
-  popsize = 200
+  popsize = options.popsize
   mutprob = 0.3
+  elites_percentage = 0.1
   eval_count = Value('i', 0)
 
-  def tournament(pop, fit, k = 2):
-    idx = random.sample(range(len(pop)), k)
-    tpop = []
-    tfit = []
-    for i in idx:
-      tpop.append(pop[i])
-      tfit.append(fit[i])
+  evaluator = Evaluator(world, options.sim_step, options.evo_step)
 
-    maxidx = tfit.index(max(tfit))
+  with Manager() as manager:
+    eval_count = manager.Value('i', 0)
+    lock = manager.Lock()
 
-    return tpop[maxidx]
-
-  # Initial population
-  population = []
-  rep = popsize
-
-  for _ in range(popsize):
-    r = robot_m.get_random()
-    population.append(r)
-
-  evalpars = []
-  for ind in population:
-    evalpars.append((ind, world, options.sim_step, options.evo_step))
-
-  with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
-    scores = p.starmap(evaluate, evalpars)
-
-  fitness = [s[0] for s in scores]
-  meantime = [s[1] for s in scores]
-
-  best_index = fitness.index(max(fitness))
-  best_score = scores[best_index][0]
-  best_robot = evalpars[best_index][0]
-  print(f"New best score at evaluation {eval_count.value}: {best_score}")
-  best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
-  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow([eval_count.value, best_score])
-
-  while eval_count.value < options.evo_step:
-    newpop = []
-    rep += popsize
+    # Initial population
+    population = []
+    rep = popsize
 
     for _ in range(popsize):
-      p1 = tournament(population, fitness, k = 2)
-      p2 = tournament(population, fitness, k = 2)
-      offspring = p1.crossover(p2)
-      if random.random() < mutprob:
-        offspring.mutate()
-      newpop.append(offspring)
-
-    population = newpop 
+      r = robot_m.get_random()
+      population.append(r)
 
     evalpars = []
     for ind in population:
-      evalpars.append((ind, world, options.sim_step, options.evo_step))
+      evalpars.append((ind, eval_count, lock))
 
-    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
-      scores = p.starmap(evaluate, evalpars)
+    with Pool(options.numprocs) as p:
+      scores = p.starmap(evaluator.evaluate, evalpars)
 
     fitness = [s[0] for s in scores]
-    for s in scores:
-      meantime.append(s[1])
+    meantime = [s[1] for s in scores]
 
     best_index = fitness.index(max(fitness))
+    best_score = scores[best_index][0]
+    best_robot = evalpars[best_index][0]
+    print(f"New best score at evaluation {eval_count.value}: {best_score}")
+    best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
+    with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+      writer = csv.writer(f)
+      writer.writerow([eval_count.value, best_score])
 
+
+    # local serach list
+    from EC_algorithms.local_search.hill_climbing import HillClimbing
+    from EC_algorithms.local_search.tabu_search import TabuSearch
+    local_search_algorithms = {
+      "Hill_Climbing": HillClimbing,
+      "Tabu_Search": TabuSearch
+    }
+    if options.local_search_algorithm != None:
+      local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+    else:
+      local_search = None
+
+    # sort offsprings
+    elites_indices = np.argsort(fitness)[::-1]
+    # local search
+    parameters = []
+    for i in elites_indices[:int(popsize*elites_percentage)]:
+      parameters.append((population[i], fitness[i], prefix, eval_count, lock))
+    
+    with Pool(options.numprocs) as p:
+      scores = p.starmap(local_search.Search, parameters)
+    
+    elites_fitness = [s[0] for s in scores]
+    for s in scores:
+      meantime += s[1]
+    
+    best_index = elites_fitness.index(max(elites_fitness))
+    
     if best_score < scores[best_index][0]:
       best_score = scores[best_index][0]
       best_robot = evalpars[best_index][0]
       print(f"New best score at evaluation {eval_count.value}: {best_score}")
-      best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
+      best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
       with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([eval_count.value, best_score])
 
-  print(f'eval_count = {eval_count.value}')
-  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow([eval_count.value, best_score])
+    for i in range(len(elites_fitness)):
+      fitness[elites_indices[i]] = elites_fitness[i]
+
+    while eval_count.value < options.evo_step:
+      newpop = []
+      rep += popsize
+
+      for _ in range(popsize):
+        p1 = tournament(population, fitness, k = 2)
+        p2 = tournament(population, fitness, k = 2)
+        offspring = p1.crossover(p2)
+        if random.random() < mutprob:
+          offspring.mutate()
+        newpop.append(offspring)
+
+      population = newpop 
+
+      evalpars = []
+      for ind in population:
+        evalpars.append((ind, eval_count, lock))
+
+      with Pool(options.numprocs) as p:
+        scores = p.starmap(evaluator.evaluate, evalpars)
+
+      fitness = [s[0] for s in scores]
+      for s in scores:
+        meantime.append(s[1])
+
+      best_index = fitness.index(max(fitness))
+
+      if best_score < scores[best_index][0]:
+        best_score = scores[best_index][0]
+        best_robot = evalpars[best_index][0]
+        print(f"New best score at evaluation {eval_count.value}: {best_score}")
+        best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json") 
+        with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+          writer = csv.writer(f)
+          writer.writerow([eval_count.value, best_score])
+
+    print(f'eval_count = {eval_count.value}')
+    with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
+      writer = csv.writer(f)
+      writer.writerow([eval_count.value, best_score])
+
   return meantime
 
 
@@ -321,9 +370,20 @@ def mulpro_init(args):
   counter = args
 
 def MA_search(robot_m, world, options, prefix):
+  # local serach list
+  from EC_algorithms.local_search.hill_climbing import HillClimbing
+  from EC_algorithms.local_search.tabu_search import TabuSearch
+  local_search_algorithms = {
+    "Hill_Climbing": HillClimbing,
+    "Tabu_Search": TabuSearch
+  }
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
-  hill_climbing = HillClimbing(evaluator)
-  return EC.MA.Search(robot_m, world, options, prefix, evaluator, hill_climbing)
+  if options.local_search_algorithm != None:
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+  else:
+    local_search = None
+
+  return EC.MA.Search(robot_m, world, options, prefix, evaluator, local_search)
 
 
 
@@ -335,7 +395,10 @@ def main():
 
 
   today  = time.strftime("%m%d%H%M")
-  prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{today}"
+  if options.local_search_algorithm != None:
+    prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{options.local_search_algorithm}_{options.popsize}_{today}"
+  else:
+    prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{options.popsize}_{today}"
 
   # csv record file
   with open(f'{prefix}_best_record.csv', 'w', newline='') as f:
@@ -414,6 +477,16 @@ score.
   parser.add_option("--numprocs",
                     type ="int", default = 5,
                     help = "Number of cores to use for parallel processing. Default 5")
+
+  parser.add_option("--popsize",
+                    type ="int", default = 100,
+                    help = "Number of population size. Default 100")
+
+  algorithms = ["Hill_Climbing", "Tabu_Search"]
+  parser.add_option("-L", "--local_search_algorithm",
+                    type = "choice", choices = algorithms,
+                    default = None,
+                    help="Which local search algorithm to use in MA. Default None(GA).")
   
   # parser.add_option("-q", "--quiet", default=True,
   #                   action="store_false", dest="verbose",

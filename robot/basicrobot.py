@@ -76,7 +76,10 @@ class SinRobot:
             while True:
                 old_shape = self.shape.copy()
                 pos = tuple(np.random.randint(0,5,2))
-                self.shape[pos] = np.random.randint(0,5)
+                new_voxel = np.random.randint(0,4)
+                if new_voxel >= self.shape[pos]:
+                    new_voxel += 1
+                self.shape[pos] = new_voxel
                 if self.valid():
                     break
 
