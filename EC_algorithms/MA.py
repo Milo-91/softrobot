@@ -49,6 +49,8 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
     best_score = scores[best_index][0]
     best_robot = evalpars[best_index][0]
     print(f"New best score at evaluation {eval_count.value}: {best_score}")
+    with open(f'{prefix}_evolve.txt', 'a') as f:
+      print(f"New best score at evaluation in initialization {eval_count.value}: {best_score}", file=f)
     best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
     with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
       writer = csv.writer(f)
@@ -56,7 +58,6 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
   
     while eval_count.value < options.evo_step:
       newpop = []
-      print(f'popsize: {len(population)}')
       for _ in range(popsize):
         p1 = tournament(population, fitness, k = 2)
         p2 = tournament(population, fitness, k = 2)
@@ -88,6 +89,8 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
         best_score = scores[best_index][0]
         best_robot = evalpars[best_index][0]
         print(f"New best score at evaluation {eval_count.value}: {best_score}")
+        with open(f'{prefix}_evolve.txt', 'a') as f:
+          print(f"New best score at evaluation in iteration {eval_count.value}: {best_score}", file=f)
         best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
         with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
           writer = csv.writer(f)
@@ -114,6 +117,8 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
           best_score = scores[best_index][0]
           best_robot = evalpars[best_index][0]
           print(f"New best score at evaluation {eval_count.value}: {best_score}")
+          with open(f'{prefix}_evolve.txt', 'a') as f:
+            print(f"New best score at evaluation after local search {eval_count.value}: {best_score}", file=f)
           best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
           with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
             writer = csv.writer(f)

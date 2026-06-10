@@ -42,7 +42,8 @@ class TabuSearch:
             if new_score > best_score:
                 best_robot = robot.copy()
                 best_score = new_score
-                robot.save_txt('hill best robot', f'{prefix}_evolve.txt')
-
-        robot = best_robot
+                robot.save_txt(f'tabu best robot, score: {best_score}', f'{prefix}_evolve.txt')
+        
+        robot.shape = best_robot.shape.copy()
         return best_score, mean_time
+
