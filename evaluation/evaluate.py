@@ -57,6 +57,6 @@ class Evaluator:
     #       to avoid reloading the json file all the time
   
     etime = time.time()
-  
+
     return score, (etime - stime)
   

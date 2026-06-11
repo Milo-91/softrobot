@@ -1,7 +1,13 @@
 import importlib, csv, random
 from multiprocessing import Pool, Manager
 import numpy as np
+from EC_algorithms.utils import record_md
 
+
+def record_csv(eval_count, score, filename):
+  with open(filename, 'a', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([eval_count, score])
 
 def tournament(pop, fit, k = 2):
   idx = random.sample(range(len(pop)), k)
@@ -19,21 +25,21 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
   popsize = options.popsize
   elites_percentage = 0.1
   mutprob = 0.3
-  with open(f'{prefix}_evolve.txt', 'a') as f:
-    print(f'local search algorithm: {options.local_search_algorithm}\npopsize: {popsize}\nevo_step: {options.evo_step}\n', file=f)
+  gen_count = 0
+  record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}')
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
     lock = manager.Lock()
 
     # Initial population
+    record_md(f'{prefix}_evolve.md', content=f'# Generation {gen_count}')
+    gen_count += 1
     population = []
   
     for _ in range(popsize):
       r = robot_m.get_random()
-      population.append(r)
-      r.save_txt('initial', f'{prefix}_evolve.txt')
-  
+      population.append(r) 
   
     evalpars = []
     for ind in population:
@@ -44,30 +50,35 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
   
     fitness = [s[0] for s in scores]
     meantime = [s[1] for s in scores]
+
+    # set scores
+    for i in range(popsize):
+      population[i].set_score(fitness[i])
+      record_md(f'{prefix}_evolve.md', robot=population[i])
   
     best_index = fitness.index(max(fitness))
     best_score = scores[best_index][0]
     best_robot = evalpars[best_index][0]
-    print(f"New best score at evaluation {eval_count.value}: {best_score}")
-    with open(f'{prefix}_evolve.txt', 'a') as f:
-      print(f"New best score at evaluation in initialization {eval_count.value}: {best_score}", file=f)
+    if best_robot.score != best_score:
+      print('error for score setting')
+      exit(1)
+    print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+    record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in initialization {eval_count.value}: {best_robot.score}")
     best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-    with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-      writer = csv.writer(f)
-      writer.writerow([eval_count.value, best_score])
+    record_csv(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
   
     while eval_count.value < options.evo_step:
+      record_md(f'{prefix}_evolve.md', content=f'# Generation {gen_count}')
+      gen_count += 1
       newpop = []
       for _ in range(popsize):
         p1 = tournament(population, fitness, k = 2)
         p2 = tournament(population, fitness, k = 2)
-        p1.save_txt('parent1', f'{prefix}_evolve.txt')
-        p2.save_txt('parent2', f'{prefix}_evolve.txt')
-        offspring = p1.crossover(p2)
-        offspring.save_txt('after crossover', f'{prefix}_evolve.txt')
+        offspring = robot_m.crossover(p1, p2)
+        record_md(f'{prefix}_evolve.md', content='after crossover', robot=offspring)
         if random.random() < mutprob:
-          offspring.mutate()
-          offspring.save_txt('after mutation', f'{prefix}_evolve.txt')
+          offspring = robot_m.mutate(offspring)
+          record_md(f'{prefix}_evolve.md', content='after mutation', robot=offspring)
         newpop.append(offspring)
   
       population = newpop
@@ -82,55 +93,64 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
       fitness = [s[0] for s in scores]
       for s in scores:
         meantime.append(s[1])
+      
+      # set scores
+      for i in range(popsize):
+        population[i].set_score(fitness[i])
+        record_md(f'{prefix}_evolve.md', content='offsping', robot=population[i])
   
       best_index = fitness.index(max(fitness))
-  
-      if best_score < scores[best_index][0]:
+      if best_robot.score < scores[best_index][0]:
         best_score = scores[best_index][0]
         best_robot = evalpars[best_index][0]
-        print(f"New best score at evaluation {eval_count.value}: {best_score}")
-        with open(f'{prefix}_evolve.txt', 'a') as f:
-          print(f"New best score at evaluation in iteration {eval_count.value}: {best_score}", file=f)
+        if best_robot.score != best_score:
+          print('error for score setting')
+          exit(1)
+        print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+        record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in iteration {eval_count.value}: {best_robot.score}")
         best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-        with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-          writer = csv.writer(f)
-          writer.writerow([eval_count.value, best_score])
+        record_csv(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
+
+      for ind in sorted(population, key=lambda x: x.score, reverse=True):
+        record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
   
       if local_search != None:
         # sort offsprings
-        elites_indices = np.argsort(fitness)[::-1]
+        elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:int(popsize*elites_percentage)+1]
+        print(elites[:int(popsize*elites_percentage)+1])
         # local search
         parameters = []
-        for i in elites_indices[:int(popsize*elites_percentage)]:
-          parameters.append((population[i], fitness[i], prefix, eval_count, lock))
+        for elite in elites:
+          parameters.append((elite[1], prefix, eval_count, lock))
   
         with Pool(options.numprocs) as p:
-          scores = p.starmap(local_search.Search, parameters)
+          results = p.starmap(local_search.Search, parameters)
   
-        elites_fitness = [s[0] for s in scores]
-        for s in scores:
-          meantime += s[1]
+        robots = [r[0] for r in results]
+        elites_fitness = [r[1] for r in results]
+        for r in results:
+          meantime += r[2]
+
+        for i in range(len(elites)):
+          population[elites[i][0]] = robots[i]
+
   
         best_index = elites_fitness.index(max(elites_fitness))
   
-        if best_score < scores[best_index][0]:
-          best_score = scores[best_index][0]
-          best_robot = evalpars[best_index][0]
-          print(f"New best score at evaluation {eval_count.value}: {best_score}")
-          with open(f'{prefix}_evolve.txt', 'a') as f:
-            print(f"New best score at evaluation after local search {eval_count.value}: {best_score}", file=f)
+        if best_robot.score < robots[best_index].score:
+          best_score = elites_fitness[best_index]
+          best_robot = robots[best_index]
+          print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+          record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
           best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-          with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([eval_count.value, best_score])
+          record_csv(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
 
-        for i in range(len(elites_fitness)):
-          fitness[elites_indices[i]] = elites_fitness[i]
+        for ind in sorted(population, key=lambda x: x.score, reverse=True):
+          record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
 
     print(f'eval_count: {eval_count.value}')
-    with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-      writer = csv.writer(f)
-      writer.writerow([eval_count.value, best_score])
+    print(f'best score: {best_robot.score}')
+    record_csv(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
 
   return meantime
 

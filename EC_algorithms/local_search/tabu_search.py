@@ -1,4 +1,5 @@
 import numpy as np
+from EC_algorithms.utils import record_md
 
 class TabuSearch:
 
@@ -29,21 +30,21 @@ class TabuSearch:
                 raise Exception("Can't find a valid mutation after 5000 tries!")
  
 
-    def Search(self, robot, score, prefix, eval_count, lock):
+    def Search(self, robot, prefix, eval_count, lock):
         visited = set()
-        best_score = score
         best_robot = robot.copy()
+        best_robot.set_score(robot.score)
         mean_time = []
         for _ in range(self.MAX_ITERATIONS):
             self.__mutate__(robot, visited)
-            robot.save_txt('tabu new_pop', f'{prefix}_evolve.txt')
             new_score, sim_time = self.evaluator.evaluate(robot, eval_count, lock)
+            robot.set_score(new_score)
+            record_md(f'{prefix}_evolve.md', content='tabu new_pop', robot=robot)
             mean_time.append(sim_time)
-            if new_score > best_score:
+            if new_score > best_robot.score:
                 best_robot = robot.copy()
-                best_score = new_score
-                robot.save_txt(f'tabu best robot, score: {best_score}', f'{prefix}_evolve.txt')
+                best_robot.set_score(robot.score)
+                record_md(f'{prefix}_evolve.md', content='tabu best robot', robot=best_robot)
         
-        robot.shape = best_robot.shape.copy()
-        return best_score, mean_time
+        return best_robot, best_robot.score, mean_time
 

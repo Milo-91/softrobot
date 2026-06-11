@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from evogym import is_connected
+import uuid
 
 def get_random(w = 5, h = 5):
     r = SinRobot()
@@ -12,9 +13,72 @@ def get_fromfile(filename):
     r.load_json(filename)
     return r
 
+def mutate(parent, size = 1):
+    child = SinRobot(shape=parent.shape.copy())
+    for _ in range(size):
+        count = 0
+        while True:
+            old_shape = child.shape.copy()
+            pos = tuple(np.random.randint(0,5,2))
+            new_voxel = np.random.randint(0,4)
+            if new_voxel >= child.shape[pos]:
+                new_voxel += 1
+            child.shape[pos] = new_voxel
+            if child.valid():
+                break
+
+            child.shape = old_shape
+            count += 1
+            if count > 5000:
+                raise Exception("Can't find a valid mutation after 5000 tries!")
+    return child
+            
+def crossover(parent1, parent2):
+    count = 0
+
+    while True:
+        count += 1
+        child1 = parent1.copy()
+        child2 = parent1.copy()
+
+        pos = np.random.randint(0,4)
+
+        for i in range(5):
+            if i > pos:
+                for j in range(5):
+                    child1.shape[(i,j)] = parent1.shape[(i,j)]
+                    child2.shape[(i,j)] = parent2.shape[(i,j)]
+            else:
+                for j in range(5):
+                    child1.shape[(i,j)] = parent2.shape[(i,j)]
+                    child2.shape[(i,j)] = parent1.shape[(i,j)]
+
+        if child1.valid():
+            return child1
+        if child2.valid():
+            return child2
+
+        if count > 5000:
+            return parent1.copy()
+
+
 class SinRobot:
-    def __init__(self):
-        self.shape = np.array([[1]])
+    
+    def __init__(self, shape=None):
+        self.id = uuid.uuid4().hex
+        self.score = 0
+        if shape is None:
+            self.shape = np.array([[1]])
+        else:
+            self.shape = shape
+
+    def set_score(self, score):
+        self.score = score
+
+    @classmethod
+    def get_id(cls):
+        cls.index += 1
+        return cls.index
 
     def valid(self):
         return (is_connected(self.shape) and
@@ -30,6 +94,8 @@ class SinRobot:
     def save_txt(self, comment, filename):
         with open(filename, 'a') as f:
             print(comment, file=f)
+            print(f'id: {self.id}', file=f)
+            print(f'score: {self.score}', file=f)
             print(*(self.shape.tolist()), sep='\n', file=f)
             print('\n', file=f)
 
@@ -41,8 +107,7 @@ class SinRobot:
             self.shape = np.array(rdata["shape"])
 
     def copy(self):
-        _new = SinRobot()
-        _new.shape = self.shape.copy()
+        _new = SinRobot(self.shape.copy())
         return _new
             
     def randomize(self, w = 5, h = 5):
@@ -70,48 +135,3 @@ class SinRobot:
             action.append(np.sin(steps/3 + (_*0.1))+1)
         return np.array(action)
 
-    def mutate(self, size = 1):
-        for _ in range(size):
-            count = 0
-            while True:
-                old_shape = self.shape.copy()
-                pos = tuple(np.random.randint(0,5,2))
-                new_voxel = np.random.randint(0,4)
-                if new_voxel >= self.shape[pos]:
-                    new_voxel += 1
-                self.shape[pos] = new_voxel
-                if self.valid():
-                    break
-
-                self.shape = old_shape
-                count += 1
-                if count > 5000:
-                    raise Exception("Can't find a valid mutation after 5000 tries!")
-                
-    def crossover(self, mate):
-        count = 0
-
-        while True:
-            count += 1
-            child1 = self.copy()
-            child2 = self.copy()
-
-            pos = np.random.randint(0,4)
-
-            for i in range(5):
-                if i > pos:
-                    for j in range(5):
-                        child1.shape[(i,j)] = self.shape[(i,j)]
-                        child2.shape[(i,j)] = mate.shape[(i,j)]
-                else:
-                    for j in range(5):
-                        child1.shape[(i,j)] = mate.shape[(i,j)]
-                        child2.shape[(i,j)] = self.shape[(i,j)]
-
-            if child1.valid():
-                return child1
-            if child2.valid():
-                return child2
-
-            if count > 5000:
-                return self.copy()

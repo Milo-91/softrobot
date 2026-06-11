@@ -81,7 +81,7 @@ def tournament(pop, fit, k = 2):
   return tpop[maxidx]
 
 
-def GA_search(robot_m, world, options, prefix):
+def Old_GA_search(robot_m, world, options, prefix):
   popsize = options.popsize
   mutprob = 0.3
   elites_percentage = 0.1
@@ -369,6 +369,12 @@ def mulpro_init(args):
   global counter
   counter = args
 
+
+def GA_search(robot_m, world, options, prefix):
+  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  return EC.MA.Search(robot_m, world, options, prefix, evaluator, None)
+
+
 def MA_search(robot_m, world, options, prefix):
   # local serach list
   from EC_algorithms.local_search.hill_climbing import HillClimbing
@@ -404,9 +410,6 @@ def main():
   with open(f'{prefix}_best_record.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow(['eval_count', 'score'])
-  # debug file
-  with open(f'{prefix}_evolve.txt', 'w') as f:
-    print('evolve', file=f)
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):
