@@ -3,6 +3,7 @@ import importlib, json, csv
 from multiprocessing import Pool, Value, Manager
 import numpy as np
 import EC_algorithms as EC
+from EC_algorithms import utils
 from evaluation.evaluate import Evaluator
 
 from optparse import OptionParser
@@ -406,10 +407,11 @@ def main():
   else:
     prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{options.popsize}_{today}"
 
-  # csv record file
-  with open(f'{prefix}_best_record.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['eval_count', 'score'])
+  # init csv files
+  best_robot_record_filename = f'{prefix}_best_record.csv'
+  utils.init_csv_file(['eval_count', 'score'], best_robot_record_filename)
+  similarity_record_filename = f'{prefix}_similarity_record.csv'
+  utils.init_csv_file(['gen_count', 'similarity'], similarity_record_filename)
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):
