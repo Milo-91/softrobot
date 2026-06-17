@@ -4,6 +4,8 @@ from multiprocessing import Pool, Value, Manager
 import numpy as np
 import EC_algorithms as EC
 from EC_algorithms import utils
+from EC_algorithms.local_search.hill_climbing import HillClimbing
+from EC_algorithms.local_search.tabu_search import TabuSearch
 from evaluation.evaluate import Evaluator
 
 from optparse import OptionParser
@@ -373,24 +375,31 @@ def mulpro_init(args):
 
 def GA_search(robot_m, world, options, prefix):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
-  return EC.MA.Search(robot_m, world, options, prefix, evaluator, None)
-
-
-def MA_search(robot_m, world, options, prefix):
-  # local serach list
-  from EC_algorithms.local_search.hill_climbing import HillClimbing
-  from EC_algorithms.local_search.tabu_search import TabuSearch
   local_search_algorithms = {
     "Hill_Climbing": HillClimbing,
     "Tabu_Search": TabuSearch
   }
-  evaluator = Evaluator(world, options.sim_step, options.evo_step)
   if options.local_search_algorithm != None:
     local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
   else:
     local_search = None
 
-  return EC.MA.Search(robot_m, world, options, prefix, evaluator, local_search)
+  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search)
+
+
+def MA_search(robot_m, world, options, prefix):
+  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  local_search_algorithms = {
+    "Hill_Climbing": HillClimbing,
+    "Tabu_Search": TabuSearch
+  }
+  if options.local_search_algorithm != None:
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+  else:
+    print("MA need local search")
+    exit(1)
+
+  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search)
 
 
 
@@ -487,11 +496,17 @@ score.
                     type ="int", default = 100,
                     help = "Number of population size. Default 100")
 
-  algorithms = ["Hill_Climbing", "Tabu_Search"]
+  local_algorithms = ["Hill_Climbing", "Tabu_Search"]
   parser.add_option("-L", "--local_search_algorithm",
-                    type = "choice", choices = algorithms,
+                    type = "choice", choices = local_algorithms,
                     default = None,
                     help="Which local search algorithm to use in MA. Default None(GA).")
+
+  init_method = ["LS"]
+  parser.add_option("--init_pop",
+                    type = "choice", choices = init_method,
+                    default = None,
+                    help="Which initial method to be used. Default None(random init).")
   
   # parser.add_option("-q", "--quiet", default=True,
   #                   action="store_false", dest="verbose",
