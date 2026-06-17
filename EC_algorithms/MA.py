@@ -21,6 +21,10 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
   elites_percentage = 0.1
   mutprob = 0.3
   gen_count = 0
+  LS_avg_improvement = 0
+  LS_successful_rate = 0
+  LS_individual_count = 0
+
   record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}')
 
   with Manager() as manager:
@@ -112,11 +116,12 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
       for ind in sorted(population, key=lambda x: x.score, reverse=True):
         record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
   
+      # Local Search block
       if local_search != None:
         # sort offsprings
-        elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:int(popsize*elites_percentage)+1]
+        elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
         print(elites[:int(popsize*elites_percentage)+1])
-        # local search
+        # 10% elites can perform local search
         parameters = []
         for elite in elites:
           parameters.append((elite[1], prefix, eval_count, lock))
@@ -130,8 +135,13 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
           meantime += r[2]
 
         for i in range(len(elites)):
+          # analyze successful rate of local search
+          if population[elites[i][0]].score < robots[i].score:
+            LS_avg_improvement += robots[i].score - population[elites[i][0]].score
+            LS_successful_rate += 1
           population[elites[i][0]] = robots[i]
 
+        LS_individual_count += len(elites)
   
         best_index = elites_fitness.index(max(elites_fitness))
   
@@ -152,6 +162,7 @@ def Search(robot_m, world, options, prefix, evaluator, local_search):
 
     print(f'eval_count: {eval_count.value}')
     print(f'best score: {best_robot.score}')
+    record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
     record_best_robot(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
 
   return meantime
