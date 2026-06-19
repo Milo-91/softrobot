@@ -11,25 +11,6 @@ def record_md(filename, content=None, robot=None):
             print(f'score: {robot.score}', file=f)
             print(*(robot.shape.tolist()), sep='\n', file=f)
 
-
-def init_csv_file(columns, filename):
-    with open(filename, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(columns)
-
-
-def record_similarity(num_gen, similarity, filename):
-    with open(filename, 'a', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow([num_gen, similarity])
-
-
-def record_best_robot(eval_count, score, filename):
-  with open(filename, 'a', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow([eval_count, score])
-
-
 def hamming_distance(r1, r2):
     # calculate the total number of different voxels
     r1_shape = list(itertools.chain(*(r1.shape.tolist())))

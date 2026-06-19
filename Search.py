@@ -3,7 +3,7 @@ import importlib, json, csv
 from multiprocessing import Pool, Value, Manager
 import numpy as np
 import EC_algorithms as EC
-from EC_algorithms import utils
+from EC_algorithms.logger import CSVLogger
 from EC_algorithms.local_search.hill_climbing import HillClimbing
 from EC_algorithms.local_search.tabu_search import TabuSearch
 from evaluation.evaluate import Evaluator
@@ -216,7 +216,7 @@ def Old_GA_search(robot_m, world, options, prefix):
 
 
 
-def ES_search(robot_m, world, options, prefix):
+def ES_search(robot_m, world, options, prefix, logger):
   # 1+lambda ES: Get the best robot out of 5 mutations with elitism
   offspring = 5 # lambda
   eval_count = Value('i', 0)
@@ -264,7 +264,7 @@ def ES_search(robot_m, world, options, prefix):
   return meantime
 
 
-def random_search(robot_m, world, options, prefix):
+def random_search(robot_m, world, options, prefix, logger):
   best_robot = None
   best_score = None
 
@@ -300,7 +300,7 @@ def random_search(robot_m, world, options, prefix):
   return meantime
 
 
-def random_opt_search(robot_m, world, options, prefix):
+def random_opt_search(robot_m, world, options, prefix, logger):
   base_robot = None
 
   rep = 0
@@ -373,7 +373,7 @@ def mulpro_init(args):
   counter = args
 
 
-def GA_search(robot_m, world, options, prefix):
+def GA_search(robot_m, world, options, prefix, logger):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
   local_search_algorithms = {
     "Hill_Climbing": HillClimbing,
@@ -384,10 +384,10 @@ def GA_search(robot_m, world, options, prefix):
   else:
     local_search = None
 
-  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search)
+  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search, logger)
 
 
-def MA_search(robot_m, world, options, prefix):
+def MA_search(robot_m, world, options, prefix, logger):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
   local_search_algorithms = {
     "Hill_Climbing": HillClimbing,
@@ -399,7 +399,7 @@ def MA_search(robot_m, world, options, prefix):
     print("MA need local search")
     exit(1)
 
-  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search)
+  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search, logger)
 
 
 
@@ -416,11 +416,8 @@ def main():
   else:
     prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{options.popsize}_{today}"
 
-  # init csv files
-  best_robot_record_filename = f'{prefix}_best_record.csv'
-  utils.init_csv_file(['eval_count', 'score'], best_robot_record_filename)
-  similarity_record_filename = f'{prefix}_similarity_record.csv'
-  utils.init_csv_file(['gen_count', 'similarity'], similarity_record_filename)
+  # init csv constructor
+  logger = CSVLogger(prefix)
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):
@@ -450,7 +447,7 @@ def main():
     "MA": MA_search,
   }
 
-  simtime = algorithms[options.search_algorithm](robot_m, world, options, prefix)
+  simtime = algorithms[options.search_algorithm](robot_m, world, options, prefix, logger)
   
   print(f"Simulation times: avg: {mean(simtime)}, max: {max(simtime)}, min: {min(simtime)}")
 

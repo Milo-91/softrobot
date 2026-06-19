@@ -1,4 +1,4 @@
-import importlib, csv, random
+import importlib, random
 from multiprocessing import Pool, Manager
 import numpy as np
 from EC_algorithms.utils import *
@@ -17,7 +17,7 @@ def tournament(pop, k = 5):
 
   return tpop[maxidx]
 
-def Search(robot_m, options, prefix, evaluator, local_search):
+def Search(robot_m, options, prefix, evaluator, local_search, logger):
   popsize = options.popsize
   elites_percentage = 0.1
   mutprob = 0.3
@@ -58,7 +58,7 @@ def Search(robot_m, options, prefix, evaluator, local_search):
 
       # analyze similarity
       sim = calculate_similarity(population)
-      record_similarity(gen_count, sim, f'{prefix}_similarity_record.csv')
+      logger.record_similarity(gen_count, sim)
       gen_count += 1
   
       best_index = fitness.index(max(fitness))
@@ -70,7 +70,7 @@ def Search(robot_m, options, prefix, evaluator, local_search):
       print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
       record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in initialization {eval_count.value}: {best_robot.score}")
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-      record_best_robot(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
+      logger.record_best_robot(eval_count.value, best_robot.score)
 
     else:
       init_pop_methods = {
@@ -119,7 +119,7 @@ def Search(robot_m, options, prefix, evaluator, local_search):
         print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
         record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in iteration {eval_count.value}: {best_robot.score}")
         best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-        record_best_robot(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
+        logger.record_best_robot(eval_count.value, best_robot.score)
 
       for ind in sorted(population, key=lambda x: x.score, reverse=True):
         record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
@@ -159,20 +159,21 @@ def Search(robot_m, options, prefix, evaluator, local_search):
           print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
           record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
           best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-          record_best_robot(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
+          logger.record_best_robot(eval_count.value, best_robot.score)
 
         for ind in sorted(population, key=lambda x: x.score, reverse=True):
           record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
 
         record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
-
+        # record_LS_informations
+        logger.record_LS_informations(gen_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
       sim = calculate_similarity(population)
-      record_similarity(gen_count, sim, f'{prefix}_similarity_record.csv')
+      logger.record_similarity(gen_count, sim)
       gen_count += 1
 
     print(f'eval_count: {eval_count.value}')
     print(f'best score: {best_robot.score}')
-    record_best_robot(eval_count.value, best_robot.score, f'{prefix}_best_record.csv')
+    logger.record_best_robot(eval_count.value, best_robot.score)
 
   return meantime
 

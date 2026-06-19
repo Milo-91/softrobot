@@ -8,10 +8,13 @@ def data_draw(csv_list, ax, color, label, x_axis):
     for i in range(1, len(csv_list)):
         df = pd.merge(df, csv_list[i], on=x_axis, how='outer', suffixes=('', f'_{i}'))
 
-    df = df.ffill()
+    df = df.sort_values(x_axis)
     df = df.set_index(x_axis)
-    df['mean'] = df.mean(axis=1)
-    df['std'] = df.std(axis=1)
+    df = df.ffill()
+    mean = df.mean(axis=1)
+    std = df.std(axis=1)
+    df['mean'] = mean
+    df['std'] = std
     print(df)
 
     # plot
@@ -26,60 +29,85 @@ def data_draw(csv_list, ax, color, label, x_axis):
 
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 6))
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(18, 8))
     robot_x_axis = 'eval_count'
     sim_x_axis = 'gen_count'
-    # GA
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141428_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141519_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141612_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141705_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141757_best_record.csv'))
-    data_draw(popsize20, ax[0], "blue", "GA", robot_x_axis)
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141428_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141519_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141612_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141705_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_GA_20_06141757_similarity_record.csv'))
-    data_draw(popsize20, ax[1], "blue", "GA", sim_x_axis)
-    # GA+TS
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150607_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150450_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150335_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150220_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150110_best_record.csv'))
-    data_draw(popsize20, ax[0], "green", "GA+TS", robot_x_axis)
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150607_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150450_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150335_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150220_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Tabu_Search_20_06150110_similarity_record.csv'))
-    data_draw(popsize20, ax[1], "green", "GA+TS", sim_x_axis)
-    # GA+HC
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151703_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151636_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151608_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151541_best_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151513_best_record.csv'))
-    data_draw(popsize20, ax[0], "red", "GA+HC", robot_x_axis)
-    popsize20 = []
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151703_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151636_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151608_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151541_similarity_record.csv'))
-    popsize20.append(pd.read_csv('log/20260614/popsize20/_MA_Hill_Climbing_20_06151513_similarity_record.csv'))
-    data_draw(popsize20, ax[1], "red", "GA+HC", sim_x_axis)
+    LS_x_axis = 'gen_count'
 
-    ax[0].set_title('popsize20 best robots')
-    ax[1].set_title('popsize20 similarity')
+    # GA
+    GA_files_list = [
+        '20260614/popsize20/_GA_20_06141428',
+        '20260614/popsize20/_GA_20_06141519',
+        '20260614/popsize20/_GA_20_06141612',
+        '20260614/popsize20/_GA_20_06141705',
+        '20260614/popsize20/_GA_20_06141757'
+    ]
+    best_robots = []
+    similarity = []
+    LS_avg_improvement = []
+    LS_successful_rate = []
+    for GA_file in GA_files_list:
+        best_robots.append(pd.read_csv('log/' + GA_file + '_best_record.csv'))
+        similarity.append(pd.read_csv('log/' + GA_file + '_similarity_record.csv'))
+        # LS_avg_improvement.append(pd.read_csv('log/' + GA_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
+        # LS_successful_rate.append(pd.read_csv('log/' + GA_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
+    data_draw(best_robots, ax[0][0], "blue", "GA", robot_x_axis)
+    data_draw(similarity, ax[0][1], "blue", "GA", sim_x_axis)
+    # data_draw(LS_avg_improvement, ax[1][0], "blue", "GA", LS_x_axis)
+    # data_draw(LS_successful_rate, ax[1][1], "blue", "GA", LS_x_axis)
+    
+    # GA+TS
+    TS_files_list = [
+        '20260614/popsize20/_MA_Tabu_Search_20_06150607',
+        '20260614/popsize20/_MA_Tabu_Search_20_06150450',
+        '20260614/popsize20/_MA_Tabu_Search_20_06150335',
+        '20260614/popsize20/_MA_Tabu_Search_20_06150220',
+        '20260614/popsize20/_MA_Tabu_Search_20_06150110'
+    ]
+    best_robots = []
+    similarity = []
+    LS_avg_improvement = []
+    LS_successful_rate = []
+    for TS_file in TS_files_list:
+        best_robots.append(pd.read_csv('log/' + TS_file + '_best_record.csv'))
+        similarity.append(pd.read_csv('log/' + TS_file + '_similarity_record.csv'))
+        # LS_avg_improvement.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
+        # LS_successful_rate.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
+    data_draw(best_robots, ax[0][0], "green", "GA+TS", robot_x_axis)
+    data_draw(similarity, ax[0][1], "green", "GA+TS", sim_x_axis)
+    # data_draw(LS_avg_improvement, ax[1][0], "green", "GA+TS", LS_x_axis)
+    # data_draw(LS_successful_rate, ax[1][1], "green", "GA+TS", LS_x_axis)
+
+    # GA+HC
+    HC_files_list = [
+        '20260614/popsize20/_MA_Hill_Climbing_20_06151703',
+        '20260614/popsize20/_MA_Hill_Climbing_20_06151636',
+        '20260614/popsize20/_MA_Hill_Climbing_20_06151608',
+        '20260614/popsize20/_MA_Hill_Climbing_20_06151541',
+        '20260614/popsize20/_MA_Hill_Climbing_20_06151513'
+    ]
+    best_robots = []
+    similarity = []
+    LS_avg_improvement = []
+    LS_successful_rate = []
+    for HC_file in HC_files_list:
+        best_robots.append(pd.read_csv('log/' + HC_file + '_best_record.csv'))
+        similarity.append(pd.read_csv('log/' + HC_file + '_similarity_record.csv'))
+        # LS_avg_improvement.append(pd.read_csv('log/' + HC_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
+        # LS_successful_rate.append(pd.read_csv('log/' + HC_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
+    data_draw(best_robots, ax[0][0], "red", "GA+HC", robot_x_axis)
+    data_draw(similarity, ax[0][1], "red", "GA+HC", sim_x_axis)
+    # data_draw(LS_avg_improvement, ax[1][0], "red", "GA+HC", LS_x_axis)
+    # data_draw(LS_successful_rate, ax[1][1], "red", "GA+HC", LS_x_axis)
+    
+    ax[0][0].set_title('best robots')
+    ax[0][1].set_title('similarity')
+    ax[1][0].set_title('local search avg improvement')
+    ax[1][1].set_title('local search successful rate')
 
     # plot information
     plt.legend(loc='best', fontsize=10)
+    plt.tight_layout()
     plt.show()
 
 
