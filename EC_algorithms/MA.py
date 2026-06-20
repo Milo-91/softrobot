@@ -19,6 +19,7 @@ def tournament(pop, k = 5):
 
 def Search(robot_m, options, prefix, evaluator, local_search, logger):
   popsize = options.popsize
+  min_popsize = 2
   elites_percentage = 0.1
   mutprob = 0.3
   gen_count = 0
@@ -170,6 +171,16 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
       sim = calculate_similarity(population)
       logger.record_similarity(gen_count, sim)
       gen_count += 1
+
+      # population shrink block
+      if options.pop_shrink:
+        # sort
+        population = sorted(population, key=lambda x: x.score, reverse=True)
+        # drop
+        popsize = round(options.popsize + (min_popsize - options.popsize) * eval_count.value / options.evo_step)
+        population = population[:popsize]
+        print(popsize)
+        record_md(f'{prefix}_evolve.md', content=f"gen: {gen_count}\nnew popsize after shrink: {popsize}")
 
     print(f'eval_count: {eval_count.value}')
     print(f'best score: {best_robot.score}')

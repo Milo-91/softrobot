@@ -504,6 +504,10 @@ score.
                     type = "choice", choices = init_method,
                     default = None,
                     help="Which initial method to be used. Default None(random init).")
+
+  parser.add_option("--pop_shrink",
+                    action='store_true',
+                    help="Whether shrinks population after each round.")
   
   # parser.add_option("-q", "--quiet", default=True,
   #                   action="store_false", dest="verbose",
