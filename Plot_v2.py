@@ -29,12 +29,28 @@ def data_draw(csv_list, ax, color, label, x_axis):
 
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(18, 8))
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(18, 7.3))
     robot_x_axis = 'eval_count'
     sim_x_axis = 'gen_count'
     LS_x_axis = 'gen_count'
 
+    '''
     # GA
+    GA_files_list = [
+        '20260620/popsize100/_GA_100_06210649',
+        '20260620/popsize100/_GA_100_06210601',
+        '20260620/popsize100/_GA_100_06210513',
+        '20260620/popsize100/_GA_100_06210424',
+        '20260620/popsize100/_GA_100_06210339'
+    ]
+    best_robots = []
+    similarity = []
+    for GA_file in GA_files_list:
+        best_robots.append(pd.read_csv('log/' + GA_file + '_best_record.csv'))
+        similarity.append(pd.read_csv('log/' + GA_file + '_similarity_record.csv'))
+    data_draw(best_robots, ax[0][0], "blue", "GA with pop shrink", robot_x_axis)
+    data_draw(similarity, ax[0][1], "blue", "GA with pop shrink", sim_x_axis)
+    # GA no pop shrink
     GA_files_list = [
         '20260620/popsize100/_GA_100_06191656',
         '20260620/popsize100/_GA_100_06191727',
@@ -44,25 +60,18 @@ if __name__ == '__main__':
     ]
     best_robots = []
     similarity = []
-    LS_avg_improvement = []
-    LS_successful_rate = []
     for GA_file in GA_files_list:
         best_robots.append(pd.read_csv('log/' + GA_file + '_best_record.csv'))
         similarity.append(pd.read_csv('log/' + GA_file + '_similarity_record.csv'))
-        # LS_avg_improvement.append(pd.read_csv('log/' + GA_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
-        # LS_successful_rate.append(pd.read_csv('log/' + GA_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
-    data_draw(best_robots, ax[0][0], "blue", "GA", robot_x_axis)
-    data_draw(similarity, ax[0][1], "blue", "GA", sim_x_axis)
-    # data_draw(LS_avg_improvement, ax[1][0], "blue", "GA", LS_x_axis)
-    # data_draw(LS_successful_rate, ax[1][1], "blue", "GA", LS_x_axis)
-    
+    data_draw(best_robots, ax[0][0], "red", "GA no pop shrink", robot_x_axis)
+    data_draw(similarity, ax[0][1], "red", "GA no pop shrink", sim_x_axis)
+    '''
     # GA+TS
     TS_files_list = [
-        '20260620/popsize100/_MA_Tabu_Search_100_06191657',
-        '20260620/popsize100/_MA_Tabu_Search_100_06191730',
-        '20260620/popsize100/_MA_Tabu_Search_100_06191802',
-        '20260620/popsize100/_MA_Tabu_Search_100_06191834',
-        '20260620/popsize100/_MA_Tabu_Search_100_06191906'
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211337',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211500',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211622',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211749'
     ]
     best_robots = []
     similarity = []
@@ -74,10 +83,10 @@ if __name__ == '__main__':
         LS_avg_improvement.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
         print(pd.read_csv('log/' + TS_file + '_ls_record.csv'))
         LS_successful_rate.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
-    data_draw(best_robots, ax[0][0], "green", "GA+TS", robot_x_axis)
-    data_draw(similarity, ax[0][1], "green", "GA+TS", sim_x_axis)
-    data_draw(LS_avg_improvement, ax[1][0], "green", "GA+TS", LS_x_axis)
-    data_draw(LS_successful_rate, ax[1][1], "green", "GA+TS", LS_x_axis)
+    data_draw(best_robots, ax[0][0], "green", "LS2", robot_x_axis)
+    data_draw(similarity, ax[0][1], "green", "LS2", sim_x_axis)
+    data_draw(LS_avg_improvement, ax[1][0], "green", "LS2", LS_x_axis)
+    data_draw(LS_successful_rate, ax[1][1], "green", "LS2", LS_x_axis)
 
     # GA+HC
     HC_files_list = [
@@ -96,15 +105,37 @@ if __name__ == '__main__':
         similarity.append(pd.read_csv('log/' + HC_file + '_similarity_record.csv'))
         LS_avg_improvement.append(pd.read_csv('log/' + HC_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
         LS_successful_rate.append(pd.read_csv('log/' + HC_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
-    data_draw(best_robots, ax[0][0], "red", "GA+HC", robot_x_axis)
-    data_draw(similarity, ax[0][1], "red", "GA+HC", sim_x_axis)
-    data_draw(LS_avg_improvement, ax[1][0], "red", "GA+HC", LS_x_axis)
-    data_draw(LS_successful_rate, ax[1][1], "red", "GA+HC", LS_x_axis)
+    data_draw(best_robots, ax[0][0], "red", "LS1", robot_x_axis)
+    data_draw(similarity, ax[0][1], "red", "LS1", sim_x_axis)
+    data_draw(LS_avg_improvement, ax[1][0], "red", "LS1", LS_x_axis)
+    data_draw(LS_successful_rate, ax[1][1], "red", "LS1", LS_x_axis)
     
     ax[0][0].set_title('best robots')
     ax[0][1].set_title('similarity')
     ax[1][0].set_title('local search avg improvement')
     ax[1][1].set_title('local search successful rate')
+
+    # GA+TS
+    TS_files_list = [
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211339',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211502',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211624',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06211751'
+    ]
+    best_robots = []
+    similarity = []
+    LS_avg_improvement = []
+    LS_successful_rate = []
+    for TS_file in TS_files_list:
+        best_robots.append(pd.read_csv('log/' + TS_file + '_best_record.csv'))
+        similarity.append(pd.read_csv('log/' + TS_file + '_similarity_record.csv'))
+        LS_avg_improvement.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_avg_improvement']))
+        print(pd.read_csv('log/' + TS_file + '_ls_record.csv'))
+        LS_successful_rate.append(pd.read_csv('log/' + TS_file + '_ls_record.csv', usecols=['gen_count', 'LS_successful_rate']))
+    data_draw(best_robots, ax[0][0], "blue", "LS3", robot_x_axis)
+    data_draw(similarity, ax[0][1], "blue", "LS3", sim_x_axis)
+    data_draw(LS_avg_improvement, ax[1][0], "blue", "LS3", LS_x_axis)
+    data_draw(LS_successful_rate, ax[1][1], "blue", "LS3", LS_x_axis)
 
     # plot information
     plt.legend(loc='best', fontsize=10)

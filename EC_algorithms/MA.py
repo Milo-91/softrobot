@@ -78,6 +78,12 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
         'LS': with_local_search
       }
       population, best_robot, meantime = init_pop_methods[options.init_pop](robot_m, options, prefix, evaluator, eval_count, lock, local_search)
+
+    for ind in sorted(population, key=lambda x: x.score, reverse=True):
+      record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
+    fitness = [x.score for x in population]
+    fitness = sorted(fitness, reverse=True)
+    logger.record_population(gen_count, fitness)
  
     while eval_count.value < options.evo_step:
       record_md(f'{prefix}_evolve.md', content=f'# Generation {gen_count}')
@@ -124,6 +130,9 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
 
       for ind in sorted(population, key=lambda x: x.score, reverse=True):
         record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
+      fitness = [x.score for x in population]
+      fitness = sorted(fitness, reverse=True)
+      logger.record_population(gen_count, fitness)
   
       # Local Search block
       if options.local_search_algorithm != None and options.init_pop == None:
@@ -164,9 +173,12 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
 
         for ind in sorted(population, key=lambda x: x.score, reverse=True):
           record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
+        fitness = [x.score for x in population]
+        fitness = sorted(fitness, reverse=True)
+        logger.record_population(gen_count, fitness)
 
-        record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
         # record_LS_informations
+        record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
         logger.record_LS_informations(gen_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
       sim = calculate_similarity(population)
       logger.record_similarity(gen_count, sim)

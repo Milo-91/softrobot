@@ -4,10 +4,10 @@ import numpy as np
 class HillClimbing:
 
   MAX_ITERATIONS = 5
-  MUTATION_SIZE = 1
 
-  def __init__(self, evaluator):
+  def __init__(self, evaluator, mutation_size=1):
     self.evaluator = evaluator
+    self.MUTATION_SIZE = mutation_size
 
   def __mutate__(self, robot):
     for _ in range(self.MUTATION_SIZE):

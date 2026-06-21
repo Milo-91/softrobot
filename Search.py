@@ -3,7 +3,7 @@ import importlib, json, csv
 from multiprocessing import Pool, Value, Manager
 import numpy as np
 import EC_algorithms as EC
-from EC_algorithms.logger import CSVLogger
+from EC_algorithms.logger import Logger
 from EC_algorithms.local_search.hill_climbing import HillClimbing
 from EC_algorithms.local_search.tabu_search import TabuSearch
 from evaluation.evaluate import Evaluator
@@ -417,7 +417,7 @@ def main():
     prefix = f"{options.logdir}{os.sep}{options.prefix}_{options.search_algorithm}_{options.popsize}_{today}"
 
   # init csv constructor
-  logger = CSVLogger(prefix)
+  logger = Logger(prefix)
 
   # Loading the world from a module (random) or file (fixed)
   if (args[0][-5:] == ".json"):
@@ -508,6 +508,10 @@ score.
   parser.add_option("--pop_shrink",
                     action='store_true',
                     help="Whether shrinks population after each round.")
+
+  parser.add_option("--LS_MS",
+                    type ="int", default = 1,
+                    help = "Test for different LS MS")
   
   # parser.add_option("-q", "--quiet", default=True,
   #                   action="store_false", dest="verbose",
