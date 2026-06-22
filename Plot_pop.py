@@ -4,7 +4,11 @@ import json
 
 if __name__ == '__main__':
     population_files_list = [
-        '20260621/test/_GA_100_06212144'
+        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221514',
+        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221528',
+        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221541',
+        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221553',
+        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221605'
     ]
     
     for file in population_files_list:
