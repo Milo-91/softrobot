@@ -117,10 +117,11 @@ if __name__ == '__main__':
 
     # GA+TS
     TS_files_list = [
-        '20260621/popsize100/_MA_Hill_Climbing_100_06211339',
-        '20260621/popsize100/_MA_Hill_Climbing_100_06211502',
-        '20260621/popsize100/_MA_Hill_Climbing_100_06211624',
-        '20260621/popsize100/_MA_Hill_Climbing_100_06211751'
+        '20260621/popsize100/_MA_Hill_Climbing_100_06212249',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06220001',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06220123',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06220238',
+        '20260621/popsize100/_MA_Hill_Climbing_100_06220355'
     ]
     best_robots = []
     similarity = []

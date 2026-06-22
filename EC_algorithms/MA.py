@@ -19,7 +19,8 @@ def tournament(pop, k = 5):
 
 def Search(robot_m, options, prefix, evaluator, local_search, logger):
   popsize = options.popsize
-  min_popsize = 2
+  rho = 0.6
+  tau = 5
   elites_percentage = 0.1
   mutprob = 0.3
   gen_count = 0
@@ -27,7 +28,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
   LS_successful_rate = 0
   LS_individual_count = 0
 
-  record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}')
+  record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}\n- rho: {rho}\n- tau: {tau}')
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
@@ -189,9 +190,9 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
         # sort
         population = sorted(population, key=lambda x: x.score, reverse=True)
         # drop
-        popsize = round(options.popsize + (min_popsize - options.popsize) * eval_count.value / options.evo_step)
+        popsize = round(options.popsize * (1 - (1 - rho)*(eval_count.value / options.evo_step)**tau))
         population = population[:popsize]
-        print(popsize)
+        print(f'popsize: {popsize}')
         record_md(f'{prefix}_evolve.md', content=f"gen: {gen_count}\nnew popsize after shrink: {popsize}")
 
     print(f'eval_count: {eval_count.value}')

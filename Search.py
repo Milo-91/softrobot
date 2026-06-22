@@ -486,7 +486,7 @@ score.
                     help = "Prefix string for log files")
   
   parser.add_option("--numprocs",
-                    type ="int", default = 5,
+                    type ="int", default = 4,
                     help = "Number of cores to use for parallel processing. Default 5")
 
   parser.add_option("--popsize",
