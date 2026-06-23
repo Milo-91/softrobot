@@ -17,10 +17,8 @@ def tournament(pop, k = 5):
 
   return tpop[maxidx]
 
-def Search(robot_m, options, prefix, evaluator, local_search, logger):
+def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   popsize = options.popsize
-  rho = 0.6
-  tau = 5
   elites_percentage = 0.1
   mutprob = 0.3
   gen_count = 0
@@ -28,7 +26,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
   LS_successful_rate = 0
   LS_individual_count = 0
 
-  record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}\n- rho: {rho}\n- tau: {tau}')
+  record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}\n- rho: {options.rho}\n- tau: {options.tau}')
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
@@ -49,6 +47,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
   
       with Pool(options.numprocs) as p:
         scores = p.starmap(evaluator.evaluate, evalpars)
+      pbar.update(eval_count.value - pbar.n)
   
       fitness = [s[0] for s in scores]
       meantime = [s[1] for s in scores]
@@ -66,10 +65,8 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
       best_index = fitness.index(max(fitness))
       best_score = scores[best_index][0]
       best_robot = evalpars[best_index][0]
-      if best_robot.score != best_score:
-        print('error for score setting')
-        exit(1)
-      print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+      # print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+      pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
       record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in initialization {eval_count.value}: {best_robot.score}")
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
       logger.record_best_robot(eval_count.value, best_robot.score)
@@ -107,6 +104,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
   
       with Pool(options.numprocs) as p:
         scores = p.starmap(evaluator.evaluate, evalpars)
+      pbar.update(eval_count.value - pbar.n)
   
       fitness = [s[0] for s in scores]
       for s in scores:
@@ -121,10 +119,8 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
       if best_robot.score < scores[best_index][0]:
         best_score = scores[best_index][0]
         best_robot = evalpars[best_index][0]
-        if best_robot.score != best_score:
-          print('error for score setting')
-          exit(1)
-        print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+        # print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+        pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
         record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in iteration {eval_count.value}: {best_robot.score}")
         best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
         logger.record_best_robot(eval_count.value, best_robot.score)
@@ -139,7 +135,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
       if options.local_search_algorithm != None and options.init_pop == None:
         # sort offsprings
         elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
-        print(elites[:int(popsize*elites_percentage)+1])
+        # print(elites[:int(popsize*elites_percentage)+1])
         # 10% elites can perform local search
         parameters = []
         for elite in elites:
@@ -147,6 +143,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
   
         with Pool(options.numprocs) as p:
           results = p.starmap(local_search.Search, parameters)
+        pbar.update(eval_count.value - pbar.n)
   
         robots = [r[0] for r in results]
         elites_fitness = [r[1] for r in results]
@@ -167,7 +164,8 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
         if best_robot.score < robots[best_index].score:
           best_score = elites_fitness[best_index]
           best_robot = robots[best_index]
-          print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+          # print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
+          pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
           record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
           best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
           logger.record_best_robot(eval_count.value, best_robot.score)
@@ -186,17 +184,18 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger):
       gen_count += 1
 
       # population shrink block
-      if options.pop_shrink:
+      if options.rho != 1:
         # sort
         population = sorted(population, key=lambda x: x.score, reverse=True)
         # drop
-        popsize = round(options.popsize * (1 - (1 - rho)*(eval_count.value / options.evo_step)**tau))
+        popsize = round(options.popsize * (1 - (1 - options.rho)*(eval_count.value / options.evo_step)**options.tau))
         population = population[:popsize]
-        print(f'popsize: {popsize}')
+        # print(f'popsize: {popsize}')
         record_md(f'{prefix}_evolve.md', content=f"gen: {gen_count}\nnew popsize after shrink: {popsize}")
 
-    print(f'eval_count: {eval_count.value}')
-    print(f'best score: {best_robot.score}')
+    pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
+    # print(f'eval_count: {eval_count.value}')
+    # print(f'best score: {best_robot.score}')
     logger.record_best_robot(eval_count.value, best_robot.score)
 
   return meantime

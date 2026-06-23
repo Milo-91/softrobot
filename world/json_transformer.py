@@ -103,8 +103,8 @@ def save_json(class_name, filename, grid):
                   separators = (',', ':'))
 
 def main():
-    grid = add_from_json('/Users/linchecheng/Desktop/上課用/大五下/TsukubaResearch/YASRE/log/evogym_world/sim_files/ObstacleTraverser-v0.json')
-    save_json('world.walk_line', 'ObstacleTraverser-v0.json', grid)
+    grid = add_from_json('/Users/linchecheng/Desktop/上課用/大五下/TsukubaResearch/YASRE/log/evogym_world/sim_files/ObstacleTraverser-v1.json')
+    save_json('world.walk_line', 'ObstacleTraverser-v1.json', grid)
 
 if __name__ == '__main__':
     main()
