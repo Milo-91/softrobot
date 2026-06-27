@@ -36,7 +36,7 @@ if __name__ == '__main__':
                         "--rho", str(rho),
                         "--tau", str(tau),
                         "--filename", filename,
-                        f"log/evogym_world/T_world/{task}",
+                        f"world/evogym_world/T_world/{task}",
                         "basicrobot",
                     ])
                 

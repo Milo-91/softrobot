@@ -48,7 +48,7 @@ if __name__ == '__main__':
     sim_x_axis = 'gen_count'
     LS_x_axis = 'gen_count'
     log_path = 'log/20260624/from_eclab/100/'
-    task = 'Climber-v0T'
+    task = 'ObstacleTraverser-v0T'
 
     
     all_sim = Path(f'{log_path}{task}/')
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     cmap = plt.cm.turbo
     norm = mpl.colors.Normalize(vmin=0, vmax=count)
     i = 0
-    for sim in all_sim.glob("*"):
+    for sim in all_sim.glob("r0.8*"):
         # if i == 10:
         #     break
         print(sim)
@@ -67,18 +67,10 @@ if __name__ == '__main__':
         i += 1
     
     # ga no pop shrink
-    ga_files_list = [
-        '20260621/popsize100/_ga_100_06212250',
-        '20260621/popsize100/_ga_100_06220004',
-        '20260621/popsize100/_ga_100_06220127',
-        '20260621/popsize100/_ga_100_06220242',
-        '20260621/popsize100/_ga_100_06220359'
-    ]
+    ga_files_list = Path(f'log/GA_100/')
     best_robots = []
     similarity = []
-    for ga_file in ga_files_list:
-        best_robots.append(pd.read_csv('log/' + ga_file + '_best_record.csv'))
-        similarity.append(pd.read_csv('log/' + ga_file + '_similarity_record.csv'))
+    best_robots, similarity = import_from_folder(ga_files_list)
     data_draw(best_robots, ax[0], "purple", "ga", robot_x_axis)
     data_draw(similarity, ax[1], "purple", "ga", sim_x_axis)
     
