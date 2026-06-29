@@ -30,9 +30,9 @@ if __name__ == '__main__':
                 sub_logdir = f'{logdir}/{task[:-5]}/r{sim[0]}_t{sim[1]}/'
                 for i in range(5):
                     if local_search == None:
-                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
+                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{popsize}_{time.strftime("%m%d%H%M")}_{sim[0]}_{sim[1]}'
                     else:
-                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{local_search}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
+                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{local_search}_{popsize}_{time.strftime("%m%d%H%M")}_{sim[0]}_{sim[1]}'
                         print(f'[{i}/5]')
                         subprocess.run([
                             "python",
