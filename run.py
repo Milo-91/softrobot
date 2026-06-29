@@ -25,30 +25,31 @@ if __name__ == '__main__':
 
     import_from_list = True
     if import_from_list:
-        for sim in sim_list:
-            sub_logdir = f'{logdir}/{task[:-5]}/r{sim[0]}_t{sim[1]}/'
-            for i in range(5):
-                if local_search == None:
-                    filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
-                else:
-                    filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{local_search}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
-                    print(f'[{i}/5]')
-                    subprocess.run([
-                        "python",
-                        "Search.py",
-                        "-A", algorithm,
-                        "-s", sim_step,
-                        "-e", evo_step,
-                        "-d", sub_logdir,
-                        "--popsize", popsize,
-                        "--numprocs", numprocs,
-                        "--rho", str(sim[0]),
-                        "--tau", str(sim[1]),
-                        "--filename", filename,
-                        "-L", local_search,
-                        f"world/evogym_world/T_world/{task}",
-                        "basicrobot",
-                    ])
+        for task in tasks:
+            for sim in sim_list:
+                sub_logdir = f'{logdir}/{task[:-5]}/r{sim[0]}_t{sim[1]}/'
+                for i in range(5):
+                    if local_search == None:
+                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
+                    else:
+                        filename = f'{sub_logdir}{task[:-5]}_{algorithm}_{local_search}_{popsize}_{time.strftime("%m%d%H%M")}_{rho}_{tau}'
+                        print(f'[{i}/5]')
+                        subprocess.run([
+                            "python",
+                            "Search.py",
+                            "-A", algorithm,
+                            "-s", sim_step,
+                            "-e", evo_step,
+                            "-d", sub_logdir,
+                            "--popsize", popsize,
+                            "--numprocs", numprocs,
+                            "--rho", str(sim[0]),
+                            "--tau", str(sim[1]),
+                            "--filename", filename,
+                            "-L", local_search,
+                            f"world/evogym_world/T_world/{task}",
+                            "basicrobot",
+                        ])
     else:
         for task in tasks:
             rho = 0.3
