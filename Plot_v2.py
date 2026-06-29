@@ -4,7 +4,19 @@ import numpy as np
 import pandas as pd
 import csv
 from pathlib import Path
+import re
 
+
+def sort_by_rho_tau(path):
+    pattern = re.compile(r'r([0-9\.]+)_t([0-9\.]+)')
+    sub_path = path.name
+    print(path.name)
+    match = pattern.match(sub_path)
+
+    rho = float(match.group(1))
+    tau = float(match.group(2))
+
+    return rho, tau
 
 def data_draw(csv_list, ax, color, label, x_axis):
     df = csv_list[0]
@@ -18,7 +30,7 @@ def data_draw(csv_list, ax, color, label, x_axis):
     std = df.std(axis=1)
     df['mean'] = mean
     df['std'] = std
-    print(df)
+    # print(df)
 
     # plot
     df['mean'].plot(ax=ax, color=color, marker='o', label=label)
@@ -47,8 +59,8 @@ if __name__ == '__main__':
     robot_x_axis = 'eval_count'
     sim_x_axis = 'gen_count'
     LS_x_axis = 'gen_count'
-    log_path = 'log/20260624/from_eclab/100/'
-    task = 'ObstacleTraverser-v0T'
+    log_path = 'log/20260628/from_homepc/'
+    task = 'ObstacleTraverser-v1T'
 
     
     all_sim = Path(f'{log_path}{task}/')
@@ -57,7 +69,7 @@ if __name__ == '__main__':
     cmap = plt.cm.turbo
     norm = mpl.colors.Normalize(vmin=0, vmax=count)
     i = 0
-    for sim in all_sim.glob("r0.8*"):
+    for sim in sorted(all_sim.glob("*r0.8*"), key=sort_by_rho_tau):
         # if i == 10:
         #     break
         print(sim)
@@ -66,6 +78,7 @@ if __name__ == '__main__':
         data_draw(similarity, ax[1], cmap(norm(i)), sim.name, sim_x_axis)
         i += 1
     
+    '''
     # ga no pop shrink
     ga_files_list = Path(f'log/GA_100/')
     best_robots = []
@@ -76,9 +89,10 @@ if __name__ == '__main__':
     
     ax[0].set_title('best robots')
     ax[1].set_title('similarity')
+    '''
 
     # plot information
-    ax[0].legend(loc='best', fontsize=10)
+    ax[0].legend(loc='upper left', fontsize=10)
     ax[1].legend(loc='best', fontsize=10)
     plt.tight_layout()
     plt.show()
