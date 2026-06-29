@@ -21,6 +21,8 @@ if __name__ == '__main__':
         (1, 0)
     ]
 
+    strat_time = time.time()
+
     import_from_list = True
     if import_from_list:
         for sim in sim_list:
@@ -49,7 +51,7 @@ if __name__ == '__main__':
                     ])
     else:
         for task in tasks:
-            rho = 0.4
+            rho = 0.3
             while rho < 1: 
                 tau = 0.5
                 while tau <= 32:
@@ -77,7 +79,7 @@ if __name__ == '__main__':
                         ])
                     
                     # update tau
-                    tau = round(tau * 2, 5)
+                    tau = round(tau * 4, 5)
                 # update rho
                 rho = round(rho + 0.2, 1)
 
@@ -105,3 +107,5 @@ if __name__ == '__main__':
                 f"log/evogym_world/T_world/{task}",
                 "basicrobot",
             ])
+    end_time = time.time()
+    print(f'time: {end_time - start_time}')
