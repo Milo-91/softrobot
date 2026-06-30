@@ -21,7 +21,7 @@ if __name__ == '__main__':
         (1, 0)
     ]
 
-    strat_time = time.time()
+    start_time = time.time()
 
     import_from_list = True
     if import_from_list:

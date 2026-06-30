@@ -59,7 +59,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
 
       # analyze similarity
       sim = calculate_similarity(population)
-      logger.record_similarity(gen_count, sim)
+      logger.record_similarity(eval_count.value, sim)
       gen_count += 1
   
       best_index = fitness.index(max(fitness))
@@ -132,7 +132,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       logger.record_population(gen_count, fitness)
   
       # Local Search block
-      if options.local_search_algorithm != None and options.init_pop == None:
+      if options.local_search_algorithm != None:
         # sort offsprings
         elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
         # print(elites[:int(popsize*elites_percentage)+1])
@@ -178,9 +178,9 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
 
         # record_LS_informations
         record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
-        logger.record_LS_informations(gen_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
+        logger.record_LS_informations(eval_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
       sim = calculate_similarity(population)
-      logger.record_similarity(gen_count, sim)
+      logger.record_similarity(eval_count.value, sim)
       gen_count += 1
 
       # population shrink block
@@ -198,5 +198,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
     # print(f'best score: {best_robot.score}')
     logger.record_best_robot(eval_count.value, best_robot.score)
 
-  return meantime
+  options.gen_count = gen_count
+  options.popsize = popsize
+  return best_robot, population, meantime
 

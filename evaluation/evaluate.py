@@ -34,10 +34,14 @@ class Evaluator:
     self.sim_step = sim_step
     self.evo_step = evo_step
 
+  def update_evo_step(self, evo_step):
+    self.evo_step = evo_step
+
   def evaluate(self, robot, eval_count, lock):
     # set max evo step
     with lock:
       if eval_count.value >= self.evo_step:
+        print('max evo step reached')
         return 0, 0
       eval_count.value += 1
   

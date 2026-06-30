@@ -57,10 +57,10 @@ def import_from_folder(folder):
 if __name__ == '__main__':
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(18, 7.3))
     robot_x_axis = 'eval_count'
-    sim_x_axis = 'gen_count'
-    LS_x_axis = 'gen_count'
-    log_path = 'log/20260628/from_homepc/'
-    task = 'ObstacleTraverser-v1T'
+    sim_x_axis = 'eval_count'
+    LS_x_axis = 'eval_count'
+    log_path = 'log/20260629/popsize100/'
+    task = 'Climber-v0T'
 
     
     all_sim = Path(f'{log_path}{task}/')
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     cmap = plt.cm.turbo
     norm = mpl.colors.Normalize(vmin=0, vmax=count)
     i = 0
-    for sim in sorted(all_sim.glob("*r0.8*"), key=sort_by_rho_tau):
+    for sim in sorted(all_sim.glob("*"), key=sort_by_rho_tau):
         # if i == 10:
         #     break
         print(sim)
@@ -78,9 +78,10 @@ if __name__ == '__main__':
         data_draw(similarity, ax[1], cmap(norm(i)), sim.name, sim_x_axis)
         i += 1
     
-    '''
+    
     # ga no pop shrink
-    ga_files_list = Path(f'log/GA_100/')
+    ga_files_list = Path(f'{log_path}{task}/r1_t0/')
+    print(ga_files_list)
     best_robots = []
     similarity = []
     best_robots, similarity = import_from_folder(ga_files_list)
@@ -89,7 +90,7 @@ if __name__ == '__main__':
     
     ax[0].set_title('best robots')
     ax[1].set_title('similarity')
-    '''
+    
 
     # plot information
     ax[0].legend(loc='upper left', fontsize=10)

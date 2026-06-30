@@ -14,10 +14,10 @@ class Logger:
         writer.writerow(['eval_count', 'score'])
     with open(self.similarity_filename, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['gen_count', 'similarity'])
+        writer.writerow(['eval_count', 'similarity'])
     with open(self.ls_filename, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['gen_count', 'LS_avg_improvement', 'LS_successful_rate'])
+        writer.writerow(['eval_count', 'LS_avg_improvement', 'LS_successful_rate'])
     # init json files
     with open(self.population_filename, 'w') as f:
       f.write("")
@@ -28,15 +28,15 @@ class Logger:
       writer = csv.writer(f)
       writer.writerow([eval_count, score])
 
-  def record_similarity(self, num_gen, similarity):
+  def record_similarity(self, eval_count, similarity):
     with open(self.similarity_filename, 'a', newline='') as f:
       writer = csv.writer(f)
-      writer.writerow([num_gen, similarity])
+      writer.writerow([eval_count, similarity])
 
-  def record_LS_informations(self, num_gen, LS_avg_improvement, LS_successful_rate):
+  def record_LS_informations(self, eval_count, LS_avg_improvement, LS_successful_rate):
     with open(self.ls_filename, 'a', newline='') as f:
       writer = csv.writer(f)
-      writer.writerow([num_gen, LS_avg_improvement, LS_successful_rate])
+      writer.writerow([eval_count, LS_avg_improvement, LS_successful_rate])
 
   def record_population(self, gen_count, fitness):
     fitness = sorted(fitness, reverse=True)

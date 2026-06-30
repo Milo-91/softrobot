@@ -155,73 +155,6 @@ def random_search(robot_m, world, options, prefix, logger):
   return meantime
 
 
-def random_opt_search(robot_m, world, options, prefix, logger):
-  base_robot = None
-
-  rep = 0
-  meantime = []
-  top_k = []
-  hun_count = 0
-  k = 10
-  threshold = 6
-
-  while rep < options.evo_step:  
-    paramlist = []
-    numprocs = options.numprocs
-    if options.numprocs > (100 - hun_count):
-      numprocs = 100 - hun_count
-    for _ in range(numprocs):
-      paramlist.append((robot_m.get_random(base_robot), world, options.sim_step))
-
-    with Pool(numprocs) as p:
-      scores = p.starmap(evaluate, paramlist)
-
-    rep += numprocs
-    hun_count += numprocs
-
-
-    for _ in scores:
-      meantime.append(_[1])
-
-    temp_robot = [(paramlist[i][0], scores[i][0]) for i in range(numprocs)]
-    top_k.extend(temp_robot)
-    top_k.sort(key=lambda x: x[-1], reverse=True)
-    top_k = top_k[:k]
-
-    # print(f"socres\n{scores}")
-    # print(f"meantime\n{meantime}")
-    # print(f"top_{k}\n{top_k}")
-    # print(f"Mean sim time at {rep}: {mean(meantime)}")
-
-
-    if hun_count == 100:
-      temp_arr = np.stack([r[0].shape for r in top_k], axis=0)
-      H, W = temp_arr.shape[1:]
-      base_robot = np.full((H, W), -1)
-      for i in range(H):
-        for j in range(W):
-          arr = [(temp_arr[:, i, j] == n).sum() for n in range(5)]
-          for l in range(5):
-            if arr[l] >= threshold:
-              base_robot[i][j] = l
-
-      hun_count = 0
-      print(base_robot)
-      # store base_robot
-      with open(f'{prefix}_base_robit.txt', "a") as out_f:
-        s = np.array2string(
-          base_robot,
-        )
-        out_f.write(s + '\n')
-
-      count = 0
-      for r in top_k:
-        count += 1
-        r[0].save_json(f"{prefix}_robot_{rep:04}_{count}.json")
-
-  return meantime
-
-
 def GA_search(robot_m, world, options, prefix, logger, pbar):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
   local_search_algorithms = {
@@ -233,7 +166,8 @@ def GA_search(robot_m, world, options, prefix, logger, pbar):
   else:
     local_search = None
 
-  return EC.MA.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+  return EC.GA.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+
 
 
 def MA_search(robot_m, world, options, prefix, logger, pbar):
@@ -249,6 +183,22 @@ def MA_search(robot_m, world, options, prefix, logger, pbar):
     exit(1)
 
   return EC.MA.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+
+
+
+def GA_Post_LS_search(robot_m, world, options, prefix, logger, pbar):
+  evaluator = Evaluator(world, options.sim_step, options.evo_step + options.post_step)
+  local_search_algorithms = {
+    "HC": HillClimbing,
+    "TS": TabuSearch
+  }
+  if options.local_search_algorithm != None:
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+  else:
+    print("MA need local search")
+    exit(1)
+
+  return EC.GA_Post_LS.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
 
 
 
@@ -293,10 +243,10 @@ def main():
   # Running the optimization
   algorithms = {
     "random": random_search,
-    "random_opt": random_opt_search,
     "ES": ES_search,
     "GA": GA_search,
     "MA": MA_search,
+    "GA+PLS": GA_Post_LS_search,
   }
 
   # init tqdm
@@ -306,7 +256,7 @@ def main():
     pbar = tqdm(total=options.evo_step, desc=f"{(args[0].split('/')[-1])[:-5]}/{options.search_algorithm}/({options.rho},{options.tau})", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} {postfix}')
   pbar.set_postfix_str(f'best_robot: 0 popsize: {options.popsize}')
 
-  simtime = algorithms[options.search_algorithm](robot_m, world, options, prefix, logger, pbar)
+  _, _, simtime = algorithms[options.search_algorithm](robot_m, world, options, prefix, logger, pbar)
 
   pbar.close()
   
@@ -332,7 +282,11 @@ score.
                     type="int", action="store",
                     help="Number of Evaluations. Default 400.")
 
-  algorithms = ["random", "random_opt", "ES", "GA", "MA"]
+  parser.add_option("--post_step", default = 200,
+                    type="int", action="store",
+                    help="Number of post local search Evaluation. Default 200.")
+
+  algorithms = ["random", "ES", "GA", "MA", "GA+PLS"]
   parser.add_option("-A", "--search_algorithm",
                     type = "choice", choices = algorithms,
                     default = algorithms[0],
@@ -347,7 +301,7 @@ score.
                     help = "Prefix string for log files")
   
   parser.add_option("--numprocs",
-                    type ="int", default = 4,
+                    type ="int", default = 6,
                     help = "Number of cores to use for parallel processing. Default 5")
 
   parser.add_option("--popsize",

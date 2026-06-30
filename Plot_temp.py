@@ -4,7 +4,7 @@ import json
 
 popsize = []
 gen_count = []
-with open('log/20260622/popsize100/_GA_100_06221141_population_record.jsonl') as f:
+with open('log/20260628/from_eclab/Climber-v0T/r0.3_t32.0/Climber-v0T_GA_100_06271525_0.3_32.0_population_record.jsonl') as f:
     for line in f:
         data = json.loads(line)
         popsize.append(len(data['fitness']))
