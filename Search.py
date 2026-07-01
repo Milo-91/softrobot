@@ -90,6 +90,8 @@ def ES_search(robot_m, world, options, prefix, logger, pbar):
   else:
     local_search = None
 
+  
+  pbar.set_description(f"{pbar.desc.split('/')[0]}/({options.popsize},{options.lamb})-{options.search_algorithm}")
   return EC.ES.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
 
 
@@ -269,11 +271,15 @@ score.
 
   parser.add_option("--rho",
                     type = "float", default = 1,
-                    help = "Parameter of population shrink.")
+                    help = "Parameter of population shrink. Default is 1(no change).")
   
   parser.add_option("--tau",
                     type = "float", default = 1,
-                    help = "Parameter of population shrink.")
+                    help = "Parameter of population shrink. Default is 1.")
+
+  parser.add_option("--lamb",
+                    type = "int", default = 5,
+                    help = "Parameter in (mu, labmda)-ES. Default is 5.")
 
   parser.add_option("--filename",
                     default = None,

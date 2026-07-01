@@ -41,7 +41,7 @@ class Evaluator:
     # set max evo step
     with lock:
       if eval_count.value >= self.evo_step:
-        print('max evo step reached')
+        # print('max evo step reached')
         return 0, 0
       eval_count.value += 1
   
