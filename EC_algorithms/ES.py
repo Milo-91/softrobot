@@ -34,7 +34,7 @@ class Mutation:
     for _ in range(self.lamb):
       newrobot = parent.copy()
       self.__mutate__(newrobot)
-      score, sim_time = self.evaluator.evaluate(parent, eval_count, lock)
+      score, sim_time = self.evaluator.evaluate(newrobot, eval_count, lock)
       fitness.append(score)
       offspring.append(newrobot)
       meantime.append(sim_time)
@@ -96,6 +96,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
         paramlist.append((ind, eval_count, lock))
 
       newpop = []
+      fitness = []
       with Pool(options.numprocs) as p:
         results = p.starmap(Generator.Generate_Offspring, paramlist)
       pbar.update(eval_count.value - pbar.n)
@@ -104,8 +105,8 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
         newpop += r[0]
         fitness += r[1]
         meantime += r[2]
-      # print(f'newpop: {newpop}')
-      # print(f'fitness: {fitness}')
+      print(f'newpop: {newpop}')
+      print(f'fitness: {fitness}')
       # print(f'meantime: {meantime}')
 
       # set score
