@@ -6,7 +6,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   population = []
   popsize = options.popsize
   gen_count = 0
-  elites_percentage = 0.1
+  elites_percentage = 0.2
   LS_avg_improvement = 0
   LS_successful_rate = 0
   LS_individual_count = 0
@@ -92,7 +92,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
 
     # record_LS_informations
     record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
-    logger.record_LS_informations(eval_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
+    logger.record_LS_informations(eval_count.value, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
     sim = calculate_similarity(population)
     logger.record_similarity(eval_count.value, sim)
     gen_count += 1

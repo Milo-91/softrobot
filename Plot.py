@@ -38,22 +38,25 @@ def import_from_folder(folder):
     for file in folder.glob("*_similarity_record.csv"):
         similarity.append(pd.read_csv(str(file.resolve())))
 
-    return best_robots, similarity
+    LS_avg_improvement = []
+    LS_successful_rate = []
+    for file in folder.glob("*_ls_record.csv"):
+        LS_avg_improvement.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_avg_improvement']))
+        LS_successful_rate.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_successful_rate']))
+
+    return best_robots, similarity, LS_avg_improvement, LS_successful_rate
 
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(18, 7.3))
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(18, 7.3))
     robot_x_axis = 'eval_count'
-    sim_x_axis = 'gen_count'
-    LS_x_axis = 'gen_count'
+    sim_x_axis = 'eval_count'
+    LS_x_axis = 'eval_count'
 
     
     # GA with pop shrink
     folders_list = [
-        "log/20260628/from_eclab/climber-v0t/r0.9_t8.0",
-        "log/20260628/from_eclab/climber-v0t/r0.3_t32.0",
-        "log/20260628/from_eclab/climber-v0t/r0.5_t0.5",
-        "log/20260628/from_eclab/climber-v0t/r1_t0"
+        'log/20260701/popsize100/from_eclab/'
     ]
 
     count = len(folders_list)
@@ -66,19 +69,25 @@ if __name__ == '__main__':
     for folder in folders_list:
         f = Path(folder)
         print(f)
-        best_robots, similarity = import_from_folder(f)
+        best_robots, similarity, LS_avg_improvement, LS_successful_rate = import_from_folder(f)
         print(best_robots)
-        data_draw(best_robots, ax[0], cmap(norm(i)), f.name, robot_x_axis)
-        data_draw(similarity, ax[1], cmap(norm(i)), f.name, sim_x_axis)
+        data_draw(best_robots, ax[0][0], cmap(norm(i)), f.name, robot_x_axis)
+        data_draw(similarity, ax[0][1], cmap(norm(i)), f.name, sim_x_axis)
+        data_draw(LS_avg_improvement, ax[1][0], cmap(norm(i)), f.name, LS_x_axis)
+        data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
         i += 1
     
     
-    ax[0].set_title('best robots')
-    ax[1].set_title('similarity')
+    ax[0][0].set_title('best robots')
+    ax[0][1].set_title('similarity')
+    ax[1][0].set_title('local search avg improvement')
+    ax[1][1].set_title('local search successful rate')
 
     # plot information
-    ax[0].legend(loc='best', fontsize=10)
-    ax[1].legend(loc='best', fontsize=10)
+    ax[0][0].legend(loc='best', fontsize=10)
+    ax[0][1].legend(loc='best', fontsize=10)
+    ax[1][0].legend(loc='best', fontsize=10)
+    ax[1][1].legend(loc='best', fontsize=10)
     plt.tight_layout()
     plt.show()
 

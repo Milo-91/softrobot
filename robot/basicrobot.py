@@ -20,9 +20,7 @@ def mutate(parent, size = 1):
         while True:
             old_shape = child.shape.copy()
             pos = tuple(np.random.randint(0,5,2))
-            new_voxel = np.random.randint(0,4)
-            if new_voxel >= child.shape[pos]:
-                new_voxel += 1
+            new_voxel = np.random.randint(0,5)
             child.shape[pos] = new_voxel
             if child.valid():
                 break

@@ -44,81 +44,6 @@ def mean(l):
   return sum(l)/len(l)
 
 
-def evaluate(robot, world, sim_step, evo_step):
-  # set max evo step
-  if counter.value >= evo_step:
-    return 0, 0
-  with counter.get_lock():
-    counter.value += 1
-
-  stime = time.time()
-  world.restart()
-  world.set_robot(robot)
-  with suppress_stdout_stderr():
-    world.reset()   
-
-  for _ in range(sim_step):
-    world.step()
-
-  score = world.get_score()
-
-  world.sim = None
-  #FIXME: should fix the world state engine 
-  #       to avoid reloading the json file all the time
-
-  etime = time.time()
-
-  return score, (etime - stime)
-
-
-def ES_search(robot_m, world, options, prefix, logger):
-  # 1+lambda ES: Get the best robot out of 5 mutations with elitism
-  offspring = 5 # lambda
-  eval_count = Value('i', 0)
-
-  best_robot = robot_m.get_random()
-  mulpro_init(eval_count)
-  best_score = evaluate(best_robot, world, options.sim_step, options.evo_step)[0]
-  rep = 1
-
-  meantime = []
-
-  while eval_count.value < options.evo_step:
-    paramlist = []
-    for _ in range(offspring):
-      newrobot = best_robot.copy()
-      newrobot.mutate(2)
-      paramlist.append((newrobot, world, options.sim_step, options.evo_step))
-
-    with Pool(options.numprocs, initializer=mulpro_init, initargs=(eval_count,)) as p:
-      scores = p.starmap(evaluate, paramlist)
-
-    rep += offspring
-
-    for _ in scores:
-      meantime.append(_[1])
-
-    # print(f"Mean sim time at {rep}: {mean(meantime)}")
-
-
-    best_index = scores.index(max(scores))
-
-    if best_score < scores[best_index][0]:
-      best_score = scores[best_index][0]
-      best_robot = paramlist[best_index][0]
-      print(f"New best score at evaluation {rep}: {best_score}")
-      best_robot.save_json(f"{prefix}_robot_{rep:05}.json") 
-      with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow([eval_count.value, best_score])
-
-  print(f'eval_count = {eval_count.value}')
-  with open(f'{prefix}_best_record.csv', 'a', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow([eval_count.value, best_score])
-  return meantime
-
-
 def random_search(robot_m, world, options, prefix, logger):
   best_robot = None
   best_score = None
@@ -153,6 +78,20 @@ def random_search(robot_m, world, options, prefix, logger):
       best_robot.save_json(f"{prefix}_robot_{rep:05}.json")
 
   return meantime
+
+def ES_search(robot_m, world, options, prefix, logger, pbar):
+  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  local_search_algorithms = {
+    "HC": HillClimbing,
+    "TS": TabuSearch
+  }
+  if options.local_search_algorithm != None:
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+  else:
+    local_search = None
+
+  return EC.ES.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+
 
 
 def GA_search(robot_m, world, options, prefix, logger, pbar):
