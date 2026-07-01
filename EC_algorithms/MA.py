@@ -65,17 +65,18 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       best_index = fitness.index(max(fitness))
       best_score = scores[best_index][0]
       best_robot = evalpars[best_index][0]
-      # print(f"New best score at evaluation {eval_count.value}: {best_robot.score}")
       pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
       record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation in initialization {eval_count.value}: {best_robot.score}")
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
       logger.record_best_robot(eval_count.value, best_robot.score)
-
+    # init with method
     else:
       init_pop_methods = {
         'LS': with_local_search
       }
-      population, best_robot, meantime = init_pop_methods[options.init_pop](robot_m, options, prefix, evaluator, eval_count, lock, local_search)
+      evaluator.update_evo_step(options.pre_step)
+      gen_count, population, best_robot, meantime = init_pop_methods[options.init_pop](robot_m, options, prefix, evaluator, eval_count, lock, local_search, logger, pbar)
+      evaluator.update_evo_step(options.evo_step)
 
     for ind in sorted(population, key=lambda x: x.score, reverse=True):
       record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
@@ -132,7 +133,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       logger.record_population(gen_count, fitness)
   
       # Local Search block
-      if options.local_search_algorithm != None:
+      if options.local_search_algorithm != None and options.init_pop == None:
         # sort offsprings
         elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
         # print(elites[:int(popsize*elites_percentage)+1])

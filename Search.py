@@ -286,6 +286,10 @@ score.
                     type="int", action="store",
                     help="Number of post local search Evaluation. Default 200.")
 
+  parser.add_option("--pre_step", default = 200,
+                    type="int", action="store",
+                    help="Number of pre local search Evaluation. Default 200.")
+
   algorithms = ["random", "ES", "GA", "MA", "GA+PLS"]
   parser.add_option("-A", "--search_algorithm",
                     type = "choice", choices = algorithms,
@@ -318,7 +322,7 @@ score.
   parser.add_option("--init_pop",
                     type = "choice", choices = init_method,
                     default = None,
-                    help="Which initial method to be used. Default None(random init).")
+                    help="Which initial method to be used. Default None(random).")
 
   parser.add_option("--LS_MS",
                     type = "int", default = 1,
