@@ -6,13 +6,13 @@ from EC_algorithms.utils import *
 
 class Mutation:
 
-  def __init__(self, evaluator, lamb, mutation_size=2):
+  def __init__(self, prefix, evaluator, lamb, mutation_size=2):
     self.evaluator = evaluator
     self.lamb = lamb
     self.MUTATION_SIZE = mutation_size
+    self.prefix = prefix
 
   def __mutate__(self, robot):
-    record_md(f'{prefix}_evolve.md', robot=robot)
     for _ in range(self.MUTATION_SIZE):
       count = 0
       while True:
@@ -21,14 +21,13 @@ class Mutation:
           new_voxel = np.random.randint(0,5)
           robot.shape[pos] = new_voxel
           if robot.valid():
-              record_md(f'{prefix}_evolve.md', content=f'change {pos} with {new_voxel}')
+              record_md(f'{self.prefix}_evolve.md', content=f'change {pos} with {new_voxel}')
               break
 
           robot.shape = old_shape
           count += 1
           if count > 5000:
               raise Exception("Can't find a valid mutation after 5000 tries!")
-    record_md(f'{prefix}_evolve.md', robot=robot)
 
 
   def Generate_Offspring(self, parent, eval_count, lock):
@@ -37,8 +36,10 @@ class Mutation:
     fitness = []
     for _ in range(self.lamb):
       newrobot = parent.copy()
+      record_md(f'{self.prefix}_evolve.md', robot=newrobot)
       self.__mutate__(newrobot)
       score, sim_time = self.evaluator.evaluate(newrobot, eval_count, lock)
+      record_md(f'{self.prefix}_evolve.md', robot=newrobot)
       fitness.append(score)
       offspring.append(newrobot)
       meantime.append(sim_time)
@@ -51,7 +52,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   mu = options.popsize
   lamb = options.lamb # lambda
   gen_count = 0
-  Generator = Mutation(evaluator, lamb, mutation_size=5)
+  Generator = Mutation(prefix, evaluator, lamb, mutation_size=2)
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
