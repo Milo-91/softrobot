@@ -4,11 +4,7 @@ import json
 
 if __name__ == '__main__':
     population_files_list = [
-        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221514',
-        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221528',
-        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221541',
-        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221553',
-        '20260622/popsize100/pop_shrink/_MA_Hill_Climbing_100_06221605'
+        "20260701/popsize100/from_eclab/3/ObstacleTraverser-v1T_ES_20_07020113_1_1"
     ]
     
     for file in population_files_list:

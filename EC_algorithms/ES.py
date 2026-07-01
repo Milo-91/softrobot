@@ -12,6 +12,7 @@ class Mutation:
     self.MUTATION_SIZE = mutation_size
 
   def __mutate__(self, robot):
+    record_md(f'{prefix}_evolve.md', robot=robot)
     for _ in range(self.MUTATION_SIZE):
       count = 0
       while True:
@@ -20,12 +21,15 @@ class Mutation:
           new_voxel = np.random.randint(0,5)
           robot.shape[pos] = new_voxel
           if robot.valid():
+              record_md(f'{prefix}_evolve.md', content=f'change {pos} with {new_voxel}')
               break
 
           robot.shape = old_shape
           count += 1
           if count > 5000:
               raise Exception("Can't find a valid mutation after 5000 tries!")
+    record_md(f'{prefix}_evolve.md', robot=robot)
+
 
   def Generate_Offspring(self, parent, eval_count, lock):
     offspring = []
@@ -42,12 +46,12 @@ class Mutation:
     return offspring, fitness, meantime
 
 
-# mu+lambda ES
+# (mu+lambda)-ES
 def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   mu = options.popsize
   lamb = options.lamb # lambda
   gen_count = 0
-  Generator = Mutation(evaluator, lamb)
+  Generator = Mutation(evaluator, lamb, mutation_size=5)
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
@@ -75,7 +79,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
     # set scores
     for i in range(mu):
       population[i].set_score(fitness[i])
-      record_md(f'{prefix}_evolve.md', robot=population[i])
+      # record_md(f'{prefix}_evolve.md', robot=population[i])
 
     # analyze similarity
     sim = calculate_similarity(population)
@@ -112,7 +116,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       # set score
       for i in range(len(newpop)):
         newpop[i].set_score(fitness[i])
-        record_md(f'{prefix}_evolve.md', robot=newpop[i])
+        # record_md(f'{prefix}_evolve.md', robot=newpop[i])
 
       population = sorted(newpop, key=lambda x: x.score, reverse=True)[:mu]
 

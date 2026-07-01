@@ -56,7 +56,7 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260701/test/2/'
+        'log/20260701/popsize100/from_eclab/3/'
     ]
 
     count = len(folders_list)
