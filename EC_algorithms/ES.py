@@ -19,7 +19,7 @@ class Mutation:
       while True:
           old_shape = robot.shape.copy()
           pos = tuple(self.rng.integers(low=0, high=5, size=2))
-          new_voxel = self.rng.intergers(low=0, high=5)
+          new_voxel = self.rng.integers(low=0, high=5)
           robot.shape[pos] = new_voxel
           if robot.valid():
               record_md(f'{self.prefix}_evolve.md', content=f'change {pos} with {new_voxel}')
@@ -30,14 +30,14 @@ class Mutation:
           if count > 5000:
               raise Exception("Can't find a valid mutation after 5000 tries!")
 
-  def init_random_state(self):
+  def __init_random_state__(self):
     self.rng = np.random.default_rng()
 
   def Generate_Offspring(self, parent, eval_count, lock):
     offspring = []
     meantime = []
     fitness = []
-    init_random_state()
+    self.__init_random_state__()
     for _ in range(self.lamb):
       newrobot = parent.copy()
       record_md(f'{self.prefix}_evolve.md', content='parent', robot=newrobot)
