@@ -36,10 +36,10 @@ class Mutation:
     fitness = []
     for _ in range(self.lamb):
       newrobot = parent.copy()
-      record_md(f'{self.prefix}_evolve.md', robot=newrobot)
+      record_md(f'{self.prefix}_evolve.md', content='parent', robot=newrobot)
       self.__mutate__(newrobot)
       score, sim_time = self.evaluator.evaluate(newrobot, eval_count, lock)
-      record_md(f'{self.prefix}_evolve.md', robot=newrobot)
+      record_md(f'{self.prefix}_evolve.md', content='child', robot=newrobot)
       fitness.append(score)
       offspring.append(newrobot)
       meantime.append(sim_time)
@@ -52,7 +52,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   mu = options.popsize
   lamb = options.lamb # lambda
   gen_count = 0
-  Generator = Mutation(prefix, evaluator, lamb, mutation_size=2)
+  Generator = Mutation(prefix, evaluator, lamb, mutation_size=5)
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
