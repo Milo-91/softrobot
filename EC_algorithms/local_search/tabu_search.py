@@ -3,20 +3,21 @@ from EC_algorithms.utils import record_md
 
 class TabuSearch:
 
-    MAX_ITERATIONS = 5
-
-    def __init__(self, evaluator):
+    def __init__(self, evaluator, lamb):
         self.evaluator = evaluator
+        self.MAX_ITERATIONS = lamb
+        self.rng = None
 
     def __mutate__(self, robot, visited):
         count = 0
         while True:
             old_shape = robot.shape.copy()
-            pos = tuple(np.random.randint(0,5,2))
+            pos = tuple(self.rng.integers(low=0, high=5, size=2))
             if pos in visited:
                 count += 1
                 continue
-            new_voxel = np.random.randint(0,4)
+            # won't generate the same voxel
+            new_voxel = self.rng.integers(low=0, high=4)
             if new_voxel >= robot.shape[pos]:
                 new_voxel += 1
             robot.shape[pos] = new_voxel

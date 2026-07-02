@@ -56,7 +56,9 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   mu = options.popsize
   lamb = options.lamb # lambda
   gen_count = 0
-  Generator = Mutation(prefix, evaluator, lamb, mutation_size=5)
+  Generator = Mutation(prefix, evaluator, lamb, mutation_size=options.mutation_size)
+
+  record_md(f'{prefix}_evolve.md', content=f'- mu: {mu}\n- lambda: {lamb}\n- evo_step: {options.evo_step}\n- mutation_size: {options.mutation_size}\n')
 
   with Manager() as manager:
     eval_count = manager.Value('i', 0)
@@ -100,6 +102,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
     logger.record_best_robot(eval_count.value, best_robot.score)
 
     while eval_count.value < options.evo_step:
+      record_md(f'{prefix}_evolve.md', content=f'# Generation {gen_count}')
       paramlist = []
       for ind in population:
         paramlist.append((ind, eval_count, lock))

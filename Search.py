@@ -281,6 +281,10 @@ score.
                     type = "int", default = 5,
                     help = "Parameter in (mu, labmda)-ES. Default is 5.")
 
+  parser.add_option("--mutation_size",
+                    type = "int", default = 2,
+                    help = "Parameter of mutation size in ES. Default is 2.")
+
   parser.add_option("--filename",
                     default = None,
                     help = "Predecide filename before program running.")
