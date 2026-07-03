@@ -81,18 +81,9 @@ def random_search(robot_m, world, options, prefix, logger):
 
 def ES_search(robot_m, world, options, prefix, logger, pbar):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
-  local_search_algorithms = {
-    "HC": HillClimbing,
-    "TS": TabuSearch
-  }
-  if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
-  else:
-    local_search = None
-
   
   pbar.set_description(f"{pbar.desc.split('/')[0]}/({options.popsize},{options.lamb})-{options.search_algorithm}")
-  return EC.ES.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+  return EC.ES.Search(robot_m, options, prefix, evaluator, None, logger, pbar)
 
 
 
@@ -103,7 +94,7 @@ def GA_search(robot_m, world, options, prefix, logger, pbar):
     "TS": TabuSearch
   }
   if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
   else:
     local_search = None
 
@@ -118,7 +109,7 @@ def MA_search(robot_m, world, options, prefix, logger, pbar):
     "TS": TabuSearch
   }
   if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
   else:
     print("MA need local search")
     exit(1)
@@ -134,7 +125,7 @@ def GA_Post_LS_search(robot_m, world, options, prefix, logger, pbar):
     "TS": TabuSearch
   }
   if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator)
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
   else:
     print("MA need local search")
     exit(1)

@@ -3,32 +3,37 @@ from EC_algorithms.utils import record_md
 
 class TabuSearch:
 
-    def __init__(self, evaluator, lamb):
+    def __init__(self, evaluator, lamb, mutation_size=1):
         self.evaluator = evaluator
         self.MAX_ITERATIONS = lamb
+        self.MUTATION_SIZE = mutation_size
         self.rng = None
 
-    def __mutate__(self, robot, visited):
-        count = 0
-        while True:
-            old_shape = robot.shape.copy()
-            pos = tuple(self.rng.integers(low=0, high=5, size=2))
-            if pos in visited:
-                count += 1
-                continue
-            # won't generate the same voxel
-            new_voxel = self.rng.integers(low=0, high=4)
-            if new_voxel >= robot.shape[pos]:
-                new_voxel += 1
-            robot.shape[pos] = new_voxel
-            if robot.valid():
-                visited.add(pos)
-                break
+    def __init_random_state__(self):
+        self.rng = np.random.default_rng()
 
-            robot.shape = old_shape
-            count += 1
-            if count > 5000:
-                raise Exception("Can't find a valid mutation after 5000 tries!")
+    def __mutate__(self, robot, visited):
+        for _ in range(self.MUTATION_SIZE):
+            count = 0
+            while True:
+                old_shape = robot.shape.copy()
+                pos = tuple(self.rng.integers(low=0, high=5, size=2))
+                if pos in visited:
+                    count += 1
+                    continue
+                # won't generate the same voxel
+                new_voxel = self.rng.integers(low=0, high=4)
+                if new_voxel >= robot.shape[pos]:
+                    new_voxel += 1
+                robot.shape[pos] = new_voxel
+                if robot.valid():
+                    visited.add(pos)
+                    break
+
+                robot.shape = old_shape
+                count += 1
+                if count > 5000:
+                    raise Exception("Can't find a valid mutation after 5000 tries!")
  
 
     def Search(self, robot, prefix, eval_count, lock):
@@ -36,6 +41,7 @@ class TabuSearch:
         best_robot = robot.copy()
         best_robot.set_score(robot.score)
         mean_time = []
+        self.__init_random_state__()
         for _ in range(self.MAX_ITERATIONS):
             self.__mutate__(robot, visited)
             new_score, sim_time = self.evaluator.evaluate(robot, eval_count, lock)

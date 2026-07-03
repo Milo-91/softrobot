@@ -179,7 +179,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
 
         # record_LS_informations
         record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
-        logger.record_LS_informations(eval_count, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
+        logger.record_LS_informations(eval_count.value, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
       sim = calculate_similarity(population)
       logger.record_similarity(eval_count.value, sim)
       gen_count += 1
