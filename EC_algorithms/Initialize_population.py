@@ -34,7 +34,6 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   # analyze similarity
   sim = calculate_similarity(population)
   logger.record_similarity(eval_count.value, sim)
-  gen_count += 1
 
   best_index = fitness.index(max(fitness))
   best_score = scores[best_index][0]
@@ -49,6 +48,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   fitness = [x.score for x in population]
   fitness = sorted(fitness, reverse=True)
   logger.record_population(gen_count, fitness)
+  gen_count += 1
 
   while eval_count.value < options.pre_step:
     elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]

@@ -4,7 +4,7 @@ import json
 
 if __name__ == '__main__':
     population_files_list = [
-        "20260701/popsize100/from_eclab/3/ObstacleTraverser-v1T_ES_20_07020113_1_1"
+        "20260702/popsize100/Climber-v0T/HC/Climber-v0T_MA_HC_100_07030046_1_1"
     ]
     
     for file in population_files_list:
