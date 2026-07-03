@@ -34,17 +34,21 @@ def import_from_folder(folder):
     best_robots = []
     for file in folder.glob("*_best_record.csv"):
         best_robots.append(pd.read_csv(str(file.resolve())))
+
     similarity = []
     for file in folder.glob("*_similarity_record.csv"):
         similarity.append(pd.read_csv(str(file.resolve())))
 
-    LS_avg_improvement = []
+    # LS_avg_improvement = []
     LS_successful_rate = []
     for file in folder.glob("*_ls_record.csv"):
-        LS_avg_improvement.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_avg_improvement']))
+        # LS_avg_improvement.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_avg_improvement']))
         LS_successful_rate.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_successful_rate']))
 
-    return best_robots, similarity, LS_avg_improvement, LS_successful_rate
+    mutation_size = []
+    for file in folder.glob("*_mutation_size_record.csv"):
+        mutation_size.append(pd.read_csv(str(file.resolve())))
+    return best_robots, similarity, mutation_size, LS_successful_rate
 
 
 if __name__ == '__main__':
@@ -52,11 +56,12 @@ if __name__ == '__main__':
     robot_x_axis = 'eval_count'
     sim_x_axis = 'eval_count'
     LS_x_axis = 'eval_count'
+    mu_x_axis = 'eval_count'
 
     
     # GA with pop shrink
     folders_list = [
-        'log/20260702/popsize100/ObstacleTraverser-v0T/HC/',
+        'log/20260703/test/1/',
     ]
 
     count = len(folders_list)
@@ -69,18 +74,18 @@ if __name__ == '__main__':
     for folder in folders_list:
         f = Path(folder)
         print(f)
-        best_robots, similarity, LS_avg_improvement, LS_successful_rate = import_from_folder(f)
+        best_robots, similarity, mutation_size, LS_successful_rate = import_from_folder(f)
         print(best_robots)
         data_draw(best_robots, ax[0][0], cmap(norm(i)), f.name, robot_x_axis)
         data_draw(similarity, ax[0][1], cmap(norm(i)), f.name, sim_x_axis)
-        data_draw(LS_avg_improvement, ax[1][0], cmap(norm(i)), f.name, LS_x_axis)
+        data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
         data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
         i += 1
     
     
     ax[0][0].set_title('best robots')
     ax[0][1].set_title('similarity')
-    ax[1][0].set_title('local search avg improvement')
+    ax[1][0].set_title('mutation size')
     ax[1][1].set_title('local search successful rate')
 
     # plot information

@@ -22,9 +22,6 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
   elites_percentage = 0.1
   mutprob = 0.3
   gen_count = 0
-  LS_avg_improvement = 0
-  LS_successful_rate = 0
-  LS_individual_count = 0
 
   record_md(f'{prefix}_evolve.md', content=f'- local search algorithm: {options.local_search_algorithm}\n- popsize: {popsize}\n- evo_step: {options.evo_step}\n- elites percentage: {elites_percentage}\n- rho: {options.rho}\n- tau: {options.tau}')
 
@@ -73,7 +70,7 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       # record poulation
       fitness = [x.score for x in population]
       fitness = sorted(fitness, reverse=True)
-      logger.record_population(gen_count, fitness)
+      logger.record_population(gen_count, eval_count.value, fitness)
       for ind in sorted(population, key=lambda x: x.score, reverse=True):
         record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
       gen_count += 1
@@ -149,12 +146,13 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
           meantime += r[2]
 
         # analyze successful rate of local search
+        LS_avg_improvement = 0
+        LS_successful_rate = 0
         for i in range(len(elites)):
           if population[elites[i][0]].score < robots[i].score:
             LS_avg_improvement += robots[i].score - population[elites[i][0]].score
             LS_successful_rate += 1
-          population[elites[i][0]] = robots[i]
-        LS_individual_count += len(elites)
+          population[elites[i][0]] = robots[i] 
   
         # record best robot
         best_index = elites_fitness.index(max(elites_fitness))
@@ -167,21 +165,19 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
           logger.record_best_robot(eval_count.value, best_robot.score)
 
         # record_LS_informations
-        record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):.5f}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):.5f}")
-        logger.record_LS_informations(eval_count.value, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
+        record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / len(elites)):.5f}\nLS successful rate: {(100 * LS_successful_rate / len(elites)):.5f}")
+        logger.record_LS_informations(eval_count.value, LS_avg_improvement / len(elites), LS_successful_rate / len(elites))
 
       # record population
       fitness = [x.score for x in population]
       fitness = sorted(fitness, reverse=True)
-      logger.record_population(gen_count, fitness)
+      logger.record_population(gen_count, eval_count.value, fitness)
       for ind in sorted(population, key=lambda x: x.score, reverse=True):
         record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
 
       # analyze similarity
       sim = calculate_similarity(population)
       logger.record_similarity(eval_count.value, sim)
-
-      gen_count += 1
 
       # population shrink block
       if options.rho != 1:
@@ -191,10 +187,13 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
         popsize = round(options.popsize * (1 - (1 - options.rho)*(eval_count.value / options.evo_step)**options.tau))
         population = population[:popsize]
         record_md(f'{prefix}_evolve.md', content=f"gen: {gen_count}\nnew popsize after shrink: {popsize}")
+        pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
 
-    pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
+      gen_count += 1
+
     logger.record_best_robot(eval_count.value, best_robot.score)
 
+  # for PLS
   options.gen_count = gen_count
   options.popsize = popsize
   return best_robot, population, meantime
