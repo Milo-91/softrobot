@@ -6,6 +6,7 @@ import EC_algorithms as EC
 from EC_algorithms.logger import Logger
 from EC_algorithms.local_search.hill_climbing import HillClimbing
 from EC_algorithms.local_search.tabu_search import TabuSearch
+from EC_algorithms.local_search.evolution_strategy import EvolutionStrategy
 from evaluation.evaluate import Evaluator
 
 from optparse import OptionParser
@@ -83,6 +84,7 @@ def ES_search(robot_m, world, options, prefix, logger, pbar):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
   
   pbar.set_description(f"{pbar.desc.split('/')[0]}/({options.popsize},{options.lamb})-{options.search_algorithm}")
+  pbar.set_postfix_str(f'best_robot: 0 sigma: {options.mutation_size}')
   return EC.ES.Search(robot_m, options, prefix, evaluator, None, logger, pbar)
 
 
@@ -106,13 +108,16 @@ def MA_search(robot_m, world, options, prefix, logger, pbar):
   evaluator = Evaluator(world, options.sim_step, options.evo_step)
   local_search_algorithms = {
     "HC": HillClimbing,
-    "TS": TabuSearch
+    "TS": TabuSearch,
+    "ES": EvolutionStrategy,
   }
-  if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
-  else:
+  if options.local_search_algorithm == 'ES':
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.mu, options.lamb, options.numprocs, options.mutation_size)
+  elif options.local_search_algorithm == None:
     print("MA need local search")
     exit(1)
+  else:
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
 
   return EC.MA.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
 
@@ -244,7 +249,7 @@ score.
                     type ="int", default = 100,
                     help = "Number of population size. Default 100")
 
-  local_algorithms = ["HC", "TS"]
+  local_algorithms = ["HC", "TS", "ES"]
   parser.add_option("-L", "--local_search_algorithm",
                     type = "choice", choices = local_algorithms,
                     default = None,
@@ -256,10 +261,6 @@ score.
                     default = None,
                     help="Which initial method to be used. Default None(random).")
 
-  parser.add_option("--LS_MS",
-                    type = "int", default = 1,
-                    help = "Test for different LS MS.")
-
   parser.add_option("--rho",
                     type = "float", default = 1,
                     help = "Parameter of population shrink. Default is 1(no change).")
@@ -268,12 +269,20 @@ score.
                     type = "float", default = 1,
                     help = "Parameter of population shrink. Default is 1.")
 
+  parser.add_option("--mu",
+                    type = "int", default = 20,
+                    help = "Parameter in (mu, labmda)-ES. Default is 20.")
+
   parser.add_option("--lamb",
                     type = "int", default = 5,
                     help = "Parameter in (mu, labmda)-ES. Default is 5.")
 
   parser.add_option("--mutation_size",
                     type = "int", default = 2,
+                    help = "Parameter of mutation size in ES. Default is 2.")
+
+  parser.add_option("--adaptive_mutation_size",
+                    action = "store_true",
                     help = "Parameter of mutation size in ES. Default is 2.")
 
   parser.add_option("--filename",

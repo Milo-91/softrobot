@@ -61,7 +61,9 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260703/test/1/',
+        'log/20260704/popsize100/ObstacleTraverser-v1T/MA+ES/',
+        'log/20260702/popsize100/ObstacleTraverser-v1T/GA/',
+        'log/20260702/popsize100/ObstacleTraverser-v1T/HC/',
     ]
 
     count = len(folders_list)
@@ -78,8 +80,10 @@ if __name__ == '__main__':
         print(best_robots)
         data_draw(best_robots, ax[0][0], cmap(norm(i)), f.name, robot_x_axis)
         data_draw(similarity, ax[0][1], cmap(norm(i)), f.name, sim_x_axis)
-        data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
-        data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
+        if f.name == 'ES':
+            data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
+        if f.name != 'GA':
+            data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
         i += 1
     
     

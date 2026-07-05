@@ -130,43 +130,57 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
  
       # Local Search block
       if options.local_search_algorithm != None and options.init_pop == None:
-        elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
-        # elites_percentage of elites can perform local search
-        parameters = []
-        for elite in elites:
-          parameters.append((elite[1], prefix, eval_count, lock))
-  
-        with Pool(options.numprocs) as p:
-          results = p.starmap(local_search.Search, parameters)
-        pbar.update(eval_count.value - pbar.n)
-  
-        robots = [r[0] for r in results]
-        elites_fitness = [r[1] for r in results]
-        for r in results:
-          meantime += r[2]
+        if options.local_search_algorithm == 'ES':
+          population, sim_time = local_search.Search(population, prefix, eval_count, lock, logger, pbar)
+          meantime += sim_time
 
-        # analyze successful rate of local search
-        LS_avg_improvement = 0
-        LS_successful_rate = 0
-        for i in range(len(elites)):
-          if population[elites[i][0]].score < robots[i].score:
-            LS_avg_improvement += robots[i].score - population[elites[i][0]].score
-            LS_successful_rate += 1
-          population[elites[i][0]] = robots[i] 
+          # record best robot
+          population = sorted(population, key=lambda x:x.score, reverse=True)
+          if best_robot.score < population[0].score:
+            best_score = population[0].score
+            best_robot = population[0]
+            pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
+            record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
+            best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+            logger.record_best_robot(eval_count.value, best_robot.score)
+        else:
+          elites = sorted(enumerate(population), key=lambda x: x[1].score,reverse=True)[:max(int(popsize*elites_percentage), 1)]
+          # elites_percentage of elites can perform local search
+          parameters = []
+          for elite in elites:
+            parameters.append((elite[1], prefix, eval_count, lock))
   
-        # record best robot
-        best_index = elites_fitness.index(max(elites_fitness))
-        if best_robot.score < robots[best_index].score:
-          best_score = elites_fitness[best_index]
-          best_robot = robots[best_index]
-          pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
-          record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
-          best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
-          logger.record_best_robot(eval_count.value, best_robot.score)
+          with Pool(options.numprocs) as p:
+            results = p.starmap(local_search.Search, parameters)
+          pbar.update(eval_count.value - pbar.n)
+  
+          robots = [r[0] for r in results]
+          elites_fitness = [r[1] for r in results]
+          for r in results:
+            meantime += r[2]
 
-        # record_LS_informations
-        record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / len(elites)):.5f}\nLS successful rate: {(100 * LS_successful_rate / len(elites)):.5f}")
-        logger.record_LS_informations(eval_count.value, LS_avg_improvement / len(elites), LS_successful_rate / len(elites))
+          # analyze successful rate of local search
+          LS_avg_improvement = 0
+          LS_successful_rate = 0
+          for i in range(len(elites)):
+            if population[elites[i][0]].score < robots[i].score:
+              LS_avg_improvement += robots[i].score - population[elites[i][0]].score
+              LS_successful_rate += 1
+            population[elites[i][0]] = robots[i] 
+  
+          # record best robot
+          best_index = elites_fitness.index(max(elites_fitness))
+          if best_robot.score < robots[best_index].score:
+            best_score = elites_fitness[best_index]
+            best_robot = robots[best_index]
+            pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} popsize: {popsize}')
+            record_md(f'{prefix}_evolve.md', content=f"New best score at evaluation after local search {eval_count.value}: {best_robot.score}")
+            best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
+            logger.record_best_robot(eval_count.value, best_robot.score)
+
+          # record_LS_informations
+          record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / len(elites)):.5f}\nLS successful rate: {(100 * LS_successful_rate / len(elites)):.5f}")
+          logger.record_LS_informations(eval_count.value, LS_avg_improvement / len(elites), LS_successful_rate / len(elites))
 
       # record population
       fitness = [x.score for x in population]

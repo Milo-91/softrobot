@@ -7,9 +7,6 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   popsize = options.popsize
   gen_count = 0
   elites_percentage = 0.2
-  LS_avg_improvement = 0
-  LS_successful_rate = 0
-  LS_individual_count = 0
 
   for _ in range(popsize):
     r = robot_m.get_random()
@@ -35,6 +32,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   sim = calculate_similarity(population)
   logger.record_similarity(eval_count.value, sim)
 
+  # record best_robot
   best_index = fitness.index(max(fitness))
   best_score = scores[best_index][0]
   best_robot = evalpars[best_index][0]
@@ -43,11 +41,13 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
   logger.record_best_robot(eval_count.value, best_robot.score)
 
+  # record population
   for ind in sorted(population, key=lambda x: x.score, reverse=True):
     record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
   fitness = [x.score for x in population]
   fitness = sorted(fitness, reverse=True)
-  logger.record_population(gen_count, fitness)
+  logger.record_population(gen_count, eval_count.value, fitness)
+
   gen_count += 1
 
   while eval_count.value < options.pre_step:
@@ -66,6 +66,8 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
     for r in results:
       meantime += r[2]
 
+    LS_avg_improvement = 0
+    LS_successful_rate = 0
     for i in range(len(elites)):
       # analyze successful rate of local search
       if population[elites[i][0]].score < robots[i].score:
@@ -73,8 +75,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
         LS_successful_rate += 1
       population[elites[i][0]] = robots[i]
 
-    LS_individual_count += len(elites)    
-    
+    # record best_robot
     best_index = elites_fitness.index(max(elites_fitness))
     if best_robot.score < robots[best_index].score:
       best_score = elites_fitness[best_index]
@@ -84,17 +85,21 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
       best_robot.save_json(f"{prefix}_robot_{eval_count.value:05}.json")
       logger.record_best_robot(eval_count.value, best_robot.score)
 
+    # record population
     for ind in sorted(population, key=lambda x: x.score, reverse=True):
       record_md(f'{prefix}_evolve.md', content=f"population id: {ind.id}, score: {ind.score}")
     fitness = [x.score for x in population]
     fitness = sorted(fitness, reverse=True)
-    logger.record_population(gen_count, fitness)
+    logger.record_population(gen_count, eval_count.value, fitness)
 
     # record_LS_informations
-    record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / LS_individual_count):05}\nLS successful rate: {(100 * LS_successful_rate / LS_individual_count):05}")
-    logger.record_LS_informations(eval_count.value, LS_avg_improvement / LS_individual_count, LS_successful_rate / LS_individual_count)
+    record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(LS_avg_improvement / len(elites)):05}\nLS successful rate: {(100 * LS_successful_rate / len(elites)):05}")
+    logger.record_LS_informations(eval_count.value, LS_avg_improvement / len(elites), LS_successful_rate / len(elites))
+
+    # record similarity
     sim = calculate_similarity(population)
     logger.record_similarity(eval_count.value, sim)
+
     gen_count += 1
 
   return gen_count, population, best_robot, meantime

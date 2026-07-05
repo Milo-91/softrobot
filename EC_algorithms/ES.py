@@ -56,7 +56,7 @@ class Mutation:
 
 # (mu+lambda)-ES
 def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
-  mu = options.popsize
+  mu = options.mu
   lamb = options.lamb # lambda
   gen_count = 0
   Generator = Mutation(prefix, evaluator, lamb, mutation_size=options.mutation_size)
@@ -132,15 +132,17 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
             avg_improvement += score - parent.score
             successful_rate += 1
 
-      if successful_rate / len(newpop) > 0.25: # mutation size is too small
-        options.mutation_size += 1
-        Generator.update_mutation_size(options.mutation_size)
-      elif successful_rate / len(newpop) < 0.15: # mutation size is too big
-        if options.mutation_size > 1:
-          options.mutation_size -= 1
+      # adaptive mutation size
+      if options.adaptive_mutation_size == True:
+        if successful_rate / len(newpop) > 0.25: # mutation size is too small
+          options.mutation_size += 1
           Generator.update_mutation_size(options.mutation_size)
-      pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} sigma: {options.mutation_size}')
-      logger.record_mutation_size(eval_count.value, options.mutation_size)
+        elif successful_rate / len(newpop) < 0.15: # mutation size is too big
+          if options.mutation_size > 1:
+            options.mutation_size -= 1
+            Generator.update_mutation_size(options.mutation_size)
+        pbar.set_postfix_str(f'best_robot: {best_robot.score:.5f} sigma: {options.mutation_size}')
+        logger.record_mutation_size(eval_count.value, options.mutation_size)
 
       # record_LS_informations
       record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(avg_improvement / len(newpop)):.5f}\nLS successful rate: {(100 * successful_rate / len(newpop)):.5f}")
