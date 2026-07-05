@@ -124,7 +124,7 @@ def MA_search(robot_m, world, options, prefix, logger, pbar):
 
 
 def GA_ES_search(robot_m, world, options, prefix, logger, pbar):
-  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation)
+  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation)
   local_search_algorithms = {
     "ES": EvolutionStrategy,
   }
