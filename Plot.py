@@ -61,9 +61,10 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260704/popsize100/ObstacleTraverser-v1T/MA+ES/',
-        'log/20260702/popsize100/ObstacleTraverser-v1T/GA/',
-        'log/20260702/popsize100/ObstacleTraverser-v1T/HC/',
+        'log/20260705/popsize100/Climber-v0T/GA+ES/',
+        'log/20260704/popsize100/Climber-v0T/MA+ES/',
+        'log/20260702/popsize100/Climber-v0T/GA/',
+        'log/20260702/popsize100/Climber-v0T/ES/',
     ]
 
     count = len(folders_list)

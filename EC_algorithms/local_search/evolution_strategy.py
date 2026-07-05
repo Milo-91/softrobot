@@ -77,12 +77,14 @@ class EvolutionStrategy:
           successful_rate += 1
 
     # adaptive mutation size
+    '''
     if successful_rate / len(newpop) > 0.25: # mutation size is too small
       self.MUTATION_SIZE += 1
     elif successful_rate / len(newpop) < 0.15: # mutation size is too big
       if self.MUTATION_SIZE > 1:
         self.MUTATION_SIZE -= 1
     logger.record_mutation_size(eval_count.value, self.MUTATION_SIZE)
+    '''
 
     # record_LS_informations
     record_md(f'{prefix}_evolve.md', content=f"LS avg improvement: {(avg_improvement / len(newpop)):.5f}\nLS successful rate: {(100 * successful_rate / len(newpop)):.5f}")

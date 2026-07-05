@@ -81,7 +81,7 @@ def random_search(robot_m, world, options, prefix, logger):
   return meantime
 
 def ES_search(robot_m, world, options, prefix, logger, pbar):
-  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation)
   
   pbar.set_description(f"{pbar.desc.split('/')[0]}/({options.popsize},{options.lamb})-{options.search_algorithm}")
   pbar.set_postfix_str(f'best_robot: 0 sigma: {options.mutation_size}')
@@ -90,7 +90,7 @@ def ES_search(robot_m, world, options, prefix, logger, pbar):
 
 
 def GA_search(robot_m, world, options, prefix, logger, pbar):
-  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation)
   local_search_algorithms = {
     "HC": HillClimbing,
     "TS": TabuSearch
@@ -105,7 +105,7 @@ def GA_search(robot_m, world, options, prefix, logger, pbar):
 
 
 def MA_search(robot_m, world, options, prefix, logger, pbar):
-  evaluator = Evaluator(world, options.sim_step, options.evo_step)
+  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation)
   local_search_algorithms = {
     "HC": HillClimbing,
     "TS": TabuSearch,
@@ -123,8 +123,23 @@ def MA_search(robot_m, world, options, prefix, logger, pbar):
 
 
 
+def GA_ES_search(robot_m, world, options, prefix, logger, pbar):
+  evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation, options.strong_evaluation)
+  local_search_algorithms = {
+    "ES": EvolutionStrategy,
+  }
+  if options.local_search_algorithm == 'ES':
+    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.mu, options.lamb, options.numprocs, options.mutation_size)
+  else:
+    print("GA+ES need ES local search")
+    exit(1)
+
+  return EC.GA_ES.Search(robot_m, options, prefix, evaluator, local_search, logger, pbar)
+
+
+
 def GA_Post_LS_search(robot_m, world, options, prefix, logger, pbar):
-  evaluator = Evaluator(world, options.sim_step, options.evo_step + options.post_step)
+  evaluator = Evaluator(world, options.sim_step, options.evo_step + options.post_step, options.strong_evaluation)
   local_search_algorithms = {
     "HC": HillClimbing,
     "TS": TabuSearch
@@ -184,6 +199,7 @@ def main():
     "GA": GA_search,
     "MA": MA_search,
     "GA+PLS": GA_Post_LS_search,
+    "GA+ES": GA_ES_search,
   }
 
   # init tqdm
@@ -227,7 +243,7 @@ score.
                     type="int", action="store",
                     help="Number of pre local search Evaluation. Default 200.")
 
-  algorithms = ["random", "ES", "GA", "MA", "GA+PLS"]
+  algorithms = ["random", "ES", "GA", "MA", "GA+PLS", "GA+ES"]
   parser.add_option("-A", "--search_algorithm",
                     type = "choice", choices = algorithms,
                     default = algorithms[0],
@@ -284,6 +300,10 @@ score.
   parser.add_option("--adaptive_mutation_size",
                     action = "store_true",
                     help = "Parameter of mutation size in ES. Default is 2.")
+
+  parser.add_option("--strong_evaluation",
+                    action = "store_true",
+                    help = "This flag means whether to use strong evaluation.")
 
   parser.add_option("--filename",
                     default = None,

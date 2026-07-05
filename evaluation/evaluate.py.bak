@@ -1,5 +1,4 @@
 import time, os
-import random
 
 class suppress_stdout_stderr(object):
     '''
@@ -30,11 +29,10 @@ class suppress_stdout_stderr(object):
             os.close(fd)
 
 class Evaluator:
-  def __init__(self, world, sim_step, evo_step, strong_evaluation):
+  def __init__(self, world, sim_step, evo_step):
     self.world = world
     self.sim_step = sim_step
     self.evo_step = evo_step
-    self.strong_evaluation = strong_evaluation
 
   def update_evo_step(self, evo_step):
     self.evo_step = evo_step
@@ -57,16 +55,6 @@ class Evaluator:
       self.world.step()
   
     score = self.world.get_score()
-
-    if self.strong_evaluation:
-      # use delta t to test
-      delta_t = int(self.sim_step * random.uniform(0.5, 1))
-      for _ in range(delta_t):
-        self.world.step()
-
-      delta_score = self.world.get_score()
-      delta_speed = (delta_score - score) / delta_t
-      score += delta_speed * self.sim_step
   
     self.world.sim = None
     #FIXME: should fix the world state engine 
