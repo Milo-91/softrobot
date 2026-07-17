@@ -1,5 +1,7 @@
 import time, os
 import random
+import numpy as np
+import math
 
 class suppress_stdout_stderr(object):
     '''
@@ -35,9 +37,13 @@ class Evaluator:
     self.sim_step = sim_step
     self.evo_step = evo_step
     self.strong_evaluation = strong_evaluation
+    self.beta = 70
 
   def update_evo_step(self, evo_step):
     self.evo_step = evo_step
+
+  def __beta_softplus__(self, x):
+    return np.log(1 + math.e ** (x * self.beta))
 
   def evaluate(self, robot, eval_count, lock):
     # set max evo step
@@ -57,16 +63,21 @@ class Evaluator:
       self.world.step()
   
     score = self.world.get_score()
+    print(f'score: {score}')
 
     if self.strong_evaluation:
       # use delta t to test
-      delta_t = int(self.sim_step * random.uniform(0.5, 1))
+      delta_t = int(self.sim_step * random.uniform(0.25, 0.75))
       for _ in range(delta_t):
         self.world.step()
 
       delta_score = self.world.get_score()
       delta_speed = (delta_score - score) / delta_t
-      score += delta_speed * self.sim_step
+      scale = self.__beta_softplus__(delta_speed)
+      score *= scale
+      print(f'delta_speed: {delta_speed}')
+      print(f'scale: {scale}')
+      print(f'strong score: {score}')
   
     self.world.sim = None
     #FIXME: should fix the world state engine 
