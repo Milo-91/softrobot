@@ -76,7 +76,7 @@ class Evaluator:
       delta_speed = (delta_score - score) / delta_t
 
       print(f'old score: {score}')
-      score = score * min(delta_speed / (speed + sys.float_info.epsilon), 1)
+      score = score * max(min(delta_speed / (speed + sys.float_info.epsilon), 1), 0)
       print(f'new score: {score}')
       
   
