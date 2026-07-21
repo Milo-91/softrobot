@@ -2,6 +2,7 @@ import time, os
 import random
 import numpy as np
 import math
+import sys
 
 class suppress_stdout_stderr(object):
     '''
@@ -63,7 +64,7 @@ class Evaluator:
       self.world.step()
   
     score = self.world.get_score()
-    print(f'score: {score}')
+    speed = score / self.sim_step
 
     if self.strong_evaluation:
       # use delta t to test
@@ -73,11 +74,11 @@ class Evaluator:
 
       delta_score = self.world.get_score()
       delta_speed = (delta_score - score) / delta_t
-      scale = self.__beta_softplus__(delta_speed)
-      score *= scale
-      print(f'delta_speed: {delta_speed}')
-      print(f'scale: {scale}')
-      print(f'strong score: {score}')
+
+      print(f'old score: {score}')
+      score = score * min(delta_speed / (speed + sys.float_info.epsilon), 1)
+      print(f'new score: {score}')
+      
   
     self.world.sim = None
     #FIXME: should fix the world state engine 
