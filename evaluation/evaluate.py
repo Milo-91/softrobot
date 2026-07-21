@@ -46,6 +46,9 @@ class Evaluator:
   def __beta_softplus__(self, x):
     return np.log(1 + math.e ** (x * self.beta))
 
+  def __sigmoid__(self, x):
+    return 1 / (1 + math.e ** (-1.6 * (x + 1)))
+
   def evaluate(self, robot, eval_count, lock):
     # set max evo step
     with lock:
@@ -76,7 +79,7 @@ class Evaluator:
       delta_speed = (delta_score - score) / delta_t
 
       print(f'old score: {score}')
-      score = score * max(min(delta_speed / (speed + sys.float_info.epsilon), 1), 0)
+      score = score * self.__sigmoid__((delta_speed - speed) / (abs(speed) + sys.float_info.epsilon))
       print(f'new score: {score}')
       
   

@@ -7,18 +7,22 @@ import pandas as pd
 if __name__ == '__main__':
     population_files_list = [
         "20260702/popsize100/ObstacleTraverser-v0T/GA/ObstacleTraverser-v0T_GA_100_07031622_1_1",
+        "20260702/popsize100/ObstacleTraverser-v0T/GA+Init_pop/ObstacleTraverser-v0T_GA_HC_100_07040315_1_1",
+        "20260702/popsize100/ObstacleTraverser-v0T/GA+HC/ObstacleTraverser-v0T_MA_HC_100_07030253_1_1",
     ]
     
     for file in population_files_list:
+        plt.rcParams.update({'font.size': 14})
         fig = plt.figure(figsize = (18, 7.3))
         gs = fig.add_gridspec(nrows=2, ncols=4, width_ratios=[20, 1, 20, 1], height_ratios=[2, 1])
         ax_heat = fig.add_subplot(gs[0, 0])
         ax_sim = fig.add_subplot(gs[1, 0])
+        ax_sim.margins(x = 0)
         ax_colorbar = fig.add_subplot(gs[0, 1])
         ax_10heat = fig.add_subplot(gs[0, 2])
         ax_10colorbar = fig.add_subplot(gs[0, 3])
         ax_sim2 = fig.add_subplot(gs[1, 2])
-        plt.rcParams.update({'font.size': 14})
+        ax_sim2.margins(x = 0)
 
         fitness_history = []
         top_10_fitness_history = []
@@ -95,6 +99,8 @@ if __name__ == '__main__':
 
         # similarity
         similarity = pd.read_csv('log/' + file + '_similarity_record.csv')
+        similarity = similarity.set_index('eval_count')
+        print(similarity)
         similarity['similarity'].plot(ax=ax_sim, color='blue', marker='o', label='eval_count')
         ax_sim.set_xlabel("eval count")
         ax_sim.set_ylabel("Similarity")
