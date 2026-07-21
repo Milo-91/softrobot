@@ -1,14 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import json
+import pandas as pd
 
 if __name__ == '__main__':
     population_files_list = [
-        "20260705/Robust/ObstacleTraverser-v0T/GA+ES/ObstacleTraverser-v0T_GA+ES_ES_100_07052344_1_1",
+        "20260702/popsize100/ObstacleTraverser-v0T/GA/ObstacleTraverser-v0T_GA_100_07031622_1_1",
     ]
     
     for file in population_files_list:
-        fig, ax = plt.subplots(nrows=1, ncols=2, figsize = (18, 7.3))
+        fig = plt.figure(figsize = (18, 7.3))
+        gs = fig.add_gridspec(nrows=2, ncols=4, width_ratios=[20, 1, 20, 1], height_ratios=[2, 1])
+        ax_heat = fig.add_subplot(gs[0, 0])
+        ax_sim = fig.add_subplot(gs[1, 0])
+        ax_colorbar = fig.add_subplot(gs[0, 1])
+        ax_10heat = fig.add_subplot(gs[0, 2])
+        ax_10colorbar = fig.add_subplot(gs[0, 3])
+        ax_sim2 = fig.add_subplot(gs[1, 2])
         plt.rcParams.update({'font.size': 14})
 
         fitness_history = []
@@ -37,7 +46,7 @@ if __name__ == '__main__':
             heatmap.append(hist)
 
         heatmap = np.array(heatmap)
-        img = ax[0].imshow(
+        img = ax_heat.imshow(
             heatmap.T,
             aspect = 'auto',
             origin = 'lower',
@@ -45,10 +54,10 @@ if __name__ == '__main__':
             cmap = 'plasma'
         )    
         
-        ax[0].set_title("Population distribution")
-        ax[0].set_xlabel("Generation")
-        ax[0].set_ylabel("Fitness")
-        fig.colorbar(img, ax=ax[0])
+        ax_heat.set_title("Population Heatmap")
+        ax_heat.set_xlabel("Generation")
+        ax_heat.set_ylabel("Fitness")
+        fig.colorbar(img, cax=ax_colorbar)
 
         
         # top 10 heatmap
@@ -70,7 +79,7 @@ if __name__ == '__main__':
             top_10_heatmap.append(hist)
 
         top_10_heatmap = np.array(top_10_heatmap)
-        top_10_img = ax[1].imshow(
+        top_10_img = ax_10heat.imshow(
             top_10_heatmap.T,
             aspect = 'auto',
             origin = 'lower',
@@ -78,9 +87,20 @@ if __name__ == '__main__':
             cmap = 'plasma'
         )    
         
-        ax[1].set_title("Top 10 distribution")
-        ax[1].set_xlabel("Generation")
-        ax[1].set_ylabel("Fitness")
-        fig.colorbar(top_10_img, ax=ax[1])
+        ax_10heat.set_title("Top 10 Heatmap")
+        ax_10heat.set_xlabel("Generation")
+        ax_10heat.set_ylabel("Fitness")
+        fig.colorbar(top_10_img, cax=ax_10colorbar)
 
+
+        # similarity
+        similarity = pd.read_csv('log/' + file + '_similarity_record.csv')
+        similarity['similarity'].plot(ax=ax_sim, color='blue', marker='o', label='eval_count')
+        ax_sim.set_xlabel("eval count")
+        ax_sim.set_ylabel("Similarity")
+        similarity['similarity'].plot(ax=ax_sim2, color='blue', marker='o', label='eval_count')
+        ax_sim2.set_xlabel("eval count")
+        ax_sim2.set_ylabel("Similarity")
+
+        plt.tight_layout()
         plt.show()
