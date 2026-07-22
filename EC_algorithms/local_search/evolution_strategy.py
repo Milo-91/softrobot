@@ -94,5 +94,8 @@ class EvolutionStrategy:
     # set score
     for i in range(len(newpop)):
       newpop[i].set_score(fitness[i])
+    
+    # selection
+    newpop = sorted(newpop, key=lambda x:x.score, reverse=True)[:self.mu]
 
     return newpop, meantime

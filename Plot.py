@@ -48,7 +48,7 @@ def import_from_folder(folder):
     mutation_size = []
     for file in folder.glob("*_mutation_size_record.csv"):
         mutation_size.append(pd.read_csv(str(file.resolve())))
-    return best_robots, similarity, mutation_size, LS_successful_rate
+    return best_robots, similarity, mutation_size, LS_successful_rate, len(best_robots)
 
 
 if __name__ == '__main__':
@@ -61,9 +61,10 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260721/popsize100/Climber-v0T/ES/',
-        'log/20260705/popsize100/Climber-v0T/GA+ES/',
-        'log/20260704/popsize100/Climber-v0T/MA+ES/',
+        'log/20260721/popsize100/ObstacleTraverser-v1T/ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop/',
+        'log/20260705/popsize100/ObstacleTraverser-v1T/GA+ES/',
+        'log/20260704/popsize100/ObstacleTraverser-v1T/MA+ES/',
         # 'log/20260702/popsize100/ObstacleTraverser-v0T/GA+TS/',
     ]
 
@@ -77,10 +78,10 @@ if __name__ == '__main__':
     for folder in folders_list:
         f = Path(folder)
         print(f)
-        best_robots, similarity, mutation_size, LS_successful_rate = import_from_folder(f)
+        best_robots, similarity, mutation_size, LS_successful_rate, count = import_from_folder(f)
         print(best_robots)
-        data_draw(best_robots, ax[0][0], cmap(norm(i)), f.name, robot_x_axis)
-        data_draw(similarity, ax[0][1], cmap(norm(i)), f.name, sim_x_axis)
+        data_draw(best_robots, ax[0][0], cmap(norm(i)), f'{f.name} ({count} runs)', robot_x_axis)
+        data_draw(similarity, ax[0][1], cmap(norm(i)), f'{f.name} ({count} runs)', sim_x_axis)
         # if f.name == 'ES':
         #     data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
         # if f.name != 'GA':

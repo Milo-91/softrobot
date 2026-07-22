@@ -39,7 +39,7 @@ def import_from_folder(folder):
     for file in folder.glob("*_similarity_record.csv"):
         similarity.append(pd.read_csv(str(file.resolve())))
 
-    return best_robots, similarity
+    return best_robots, similarity, len(best_robots)
 
 if __name__ == '__main__':
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(18, 7.3))
@@ -49,9 +49,9 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260702/from_eclab//2/',
-        'log/20260705/popsize100/ObstacleTraverser-v1T/GA+ES/',
-        'log/20260704/popsize100/ObstacleTraverser-v1T/MA+ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/MA+HC/',
     ]
 
     count = len(folders_list)
@@ -64,10 +64,10 @@ if __name__ == '__main__':
     for folder in folders_list:
         f = Path(folder)
         print(f)
-        best_robots, similarity = import_from_folder(f)
+        best_robots, similarity, count = import_from_folder(f)
         print(best_robots)
-        data_draw(best_robots, ax[0], cmap(norm(i)), f.name, robot_x_axis)
-        data_draw(similarity, ax[1], cmap(norm(i)), f.name, sim_x_axis)
+        data_draw(best_robots, ax[0], cmap(norm(i)), f'{f.name} ({count} runs)', robot_x_axis)
+        data_draw(similarity, ax[1], cmap(norm(i)), f'{f.name} ({count} runs)', sim_x_axis)
         i += 1
     
     
