@@ -47,7 +47,7 @@ class Evaluator:
     return np.log(1 + math.e ** (x * self.beta))
 
   def __sigmoid__(self, x):
-    return 1 / (1 + math.e ** (-1.6 * (x + 1)))
+    return 1 / (1 + math.e ** (-4 * (x + 1)))
 
   def evaluate(self, robot, eval_count, lock):
     # set max evo step
@@ -78,9 +78,9 @@ class Evaluator:
       delta_score = self.world.get_score()
       delta_speed = (delta_score - score) / delta_t
 
-      print(f'old score: {score}')
+      # print(f'old score: {score}')
       score = score * self.__sigmoid__((delta_speed - speed) / (abs(speed) + sys.float_info.epsilon))
-      print(f'new score: {score}')
+      # print(f'new score: {score}')
       
   
     self.world.sim = None

@@ -131,11 +131,14 @@ def Search(robot_m, options, prefix, evaluator, local_search, logger, pbar):
       # Local Search block
       if options.local_search_algorithm != None and options.init_pop == None:
         if options.local_search_algorithm == 'ES':
-          elites, sim_time = local_search.Search(population, prefix, eval_count, lock, logger, pbar)
+          newpop, sim_time = local_search.Search(population, prefix, eval_count, lock, logger, pbar)
           meantime += sim_time
 
           # record best robot
           population = sorted(population, key=lambda x:x.score, reverse=True)
+          elites = sorted(newpop, key=lambda x:x.score, reverse=True)[:options.mu]
+          print(f'elites {len(elites)}')
+          print(f'pop {len(population)}')
           for i in range(len(elites)):
             population[i] = elites[i]
           if best_robot.score < population[0].score:
