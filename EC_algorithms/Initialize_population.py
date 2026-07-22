@@ -6,7 +6,7 @@ def with_local_search(robot_m, options, prefix, evaluator, eval_count, lock, loc
   population = []
   popsize = options.popsize
   gen_count = 0
-  elites_percentage = 0.2
+  elites_percentage = 1
 
   for _ in range(popsize):
     r = robot_m.get_random()
