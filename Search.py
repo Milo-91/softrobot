@@ -93,10 +93,14 @@ def GA_search(robot_m, world, options, prefix, logger, pbar):
   evaluator = Evaluator(world, options.sim_step, options.evo_step, options.strong_evaluation)
   local_search_algorithms = {
     "HC": HillClimbing,
-    "TS": TabuSearch
+    "TS": TabuSearch,
+    "ES": EvolutionStrategy,
   }
   if options.local_search_algorithm != None:
-    local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
+    if options.local_search_algorithm == 'ES':
+      local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.mu, options.lamb, options.numprocs, options.mutation_size)
+    else:
+      local_search = local_search_algorithms[options.local_search_algorithm](evaluator, options.lamb, options.mutation_size)
   else:
     local_search = None
 

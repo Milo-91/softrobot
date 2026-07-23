@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 
 
-def data_draw(csv_list, ax, color, label, x_axis):
+def data_draw(csv_list, ax, color, label, x_axis, cal_conv=False):
     df = csv_list[0]
     for i in range(1, len(csv_list)):
         df = pd.merge(df, csv_list[i], on=x_axis, how='outer', suffixes=('', f'_{i}'))
@@ -20,6 +20,19 @@ def data_draw(csv_list, ax, color, label, x_axis):
     df['std'] = std
     print(df)
 
+    print('final point', end=" ")
+    final_score = df['mean'][10000]
+    print(final_score)
+
+    # calculate convergence
+    if cal_conv:
+        tolerance = 0.1
+        threshold = final_score * tolerance
+        conv_point = df[df['mean'] < final_score - threshold].index[-1]
+        print('conv point', end=' ')
+        print(conv_point)
+        print(df['mean'][conv_point])
+
     # plot
     df['mean'].plot(ax=ax, color=color, marker='o', label=label)
     ax.fill_between(
@@ -29,6 +42,8 @@ def data_draw(csv_list, ax, color, label, x_axis):
         color=color,
         alpha=0.15,
     )
+    if cal_conv:
+        ax.scatter(conv_point, df['mean'][conv_point], color=color, marker='*', s=200, zorder=10)
 
 def import_from_folder(folder):
     best_robots = []
@@ -61,10 +76,12 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260721/popsize100/ObstacleTraverser-v1T/ES/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop/',
-        'log/20260705/popsize100/ObstacleTraverser-v1T/GA+ES/',
-        'log/20260704/popsize100/ObstacleTraverser-v1T/MA+ES/',
+        'log/20260721/popsize100/ObstacleTraverser-v0T/ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA+Init_pop/',
+        'log/20260722/popsize100/ObstacleTraverser-v0T/MA+ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/MA+HC/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/HC/',
         # 'log/20260702/popsize100/ObstacleTraverser-v0T/GA+TS/',
     ]
 
@@ -80,7 +97,7 @@ if __name__ == '__main__':
         print(f)
         best_robots, similarity, mutation_size, LS_successful_rate, count = import_from_folder(f)
         print(best_robots)
-        data_draw(best_robots, ax[0][0], cmap(norm(i)), f'{f.name} ({count} runs)', robot_x_axis)
+        data_draw(best_robots, ax[0][0], cmap(norm(i)), f'{f.name} ({count} runs)', robot_x_axis, True)
         data_draw(similarity, ax[0][1], cmap(norm(i)), f'{f.name} ({count} runs)', sim_x_axis)
         # if f.name == 'ES':
         #     data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
