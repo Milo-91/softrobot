@@ -20,12 +20,11 @@ def data_draw(csv_list, ax, color, label, x_axis, cal_conv=False):
     df['std'] = std
     print(df)
 
-    print('final point', end=" ")
-    final_score = df['mean'][10000]
-    print(final_score)
-
     # calculate convergence
     if cal_conv:
+        print('final_score', end=' ')
+        final_score = df['mean'][10000]
+        print(final_score)
         tolerance = 0.1
         threshold = final_score * tolerance
         conv_point = df[df['mean'] < final_score - threshold].index[-1]
@@ -54,16 +53,16 @@ def import_from_folder(folder):
     for file in folder.glob("*_similarity_record.csv"):
         similarity.append(pd.read_csv(str(file.resolve())))
 
-    # LS_avg_improvement = []
+    LS_avg_improvement = []
     LS_successful_rate = []
     for file in folder.glob("*_ls_record.csv"):
-        # LS_avg_improvement.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_avg_improvement']))
+        LS_avg_improvement.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_avg_improvement']))
         LS_successful_rate.append(pd.read_csv(str(file.resolve()), usecols=['eval_count', 'LS_successful_rate']))
 
-    mutation_size = []
-    for file in folder.glob("*_mutation_size_record.csv"):
-        mutation_size.append(pd.read_csv(str(file.resolve())))
-    return best_robots, similarity, mutation_size, LS_successful_rate, len(best_robots)
+    # mutation_size = []
+    # for file in folder.glob("*_mutation_size_record.csv"):
+    #     mutation_size.append(pd.read_csv(str(file.resolve())))
+    return best_robots, similarity, LS_avg_improvement, LS_successful_rate, len(best_robots)
 
 
 if __name__ == '__main__':
@@ -76,13 +75,18 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        'log/20260721/popsize100/ObstacleTraverser-v0T/ES/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA+Init_pop/',
-        'log/20260722/popsize100/ObstacleTraverser-v0T/MA+ES/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/MA+HC/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/HC/',
-        # 'log/20260702/popsize100/ObstacleTraverser-v0T/GA+TS/',
+        # 'log/20260721/popsize100/ObstacleTraverser-v0T/ES/',
+        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA+Init_pop/',
+        # 'log/20260722/popsize100/ObstacleTraverser-v0T/MA+ES/',
+        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/MA+HC/',
+        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA/',
+        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/HC/',
+
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop/',
+        'log/20260722/popsize100/ObstacleTraverser-v1T/MA+ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/MA+HC/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/HC/',
     ]
 
     count = len(folders_list)
@@ -95,20 +99,21 @@ if __name__ == '__main__':
     for folder in folders_list:
         f = Path(folder)
         print(f)
-        best_robots, similarity, mutation_size, LS_successful_rate, count = import_from_folder(f)
+        best_robots, similarity, LS_avg_improvement, LS_successful_rate, count = import_from_folder(f)
         print(best_robots)
         data_draw(best_robots, ax[0][0], cmap(norm(i)), f'{f.name} ({count} runs)', robot_x_axis, True)
         data_draw(similarity, ax[0][1], cmap(norm(i)), f'{f.name} ({count} runs)', sim_x_axis)
         # if f.name == 'ES':
         #     data_draw(mutation_size, ax[1][0], cmap(norm(i)), f.name, mu_x_axis)
-        # if f.name != 'GA':
-            # data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
+        if f.name != 'GA' and f.name != 'ES':
+            data_draw(LS_avg_improvement, ax[1][0], cmap(norm(i)), f.name, LS_x_axis)
+            data_draw(LS_successful_rate, ax[1][1], cmap(norm(i)), f.name, LS_x_axis)
         i += 1
     
     
     ax[0][0].set_title('best robots')
     ax[0][1].set_title('similarity')
-    ax[1][0].set_title('mutation size')
+    ax[1][0].set_title('local search average improvement')
     ax[1][1].set_title('local search successful rate')
 
     # plot information

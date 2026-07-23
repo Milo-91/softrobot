@@ -6,10 +6,10 @@ import pandas as pd
 
 if __name__ == '__main__':
     population_files_list = [
-        "20260721/popsize100/Climber-v0T/ES/Climber-v0T_ES_100_07211642_1_1",
-        "20260721/popsize100/Climber-v0T/ES/Climber-v0T_ES_100_07211656_1_1",
-        "20260721/popsize100/Climber-v0T/ES/Climber-v0T_ES_100_07211711_1_1",
-        "20260721/popsize100/Climber-v0T/ES/Climber-v0T_ES_100_07211725_1_1",
+        "20260722/popsize100/ObstacleTraverser-v0T/MA+ES/ObstacleTraverser-v0T_MA_ES_100_07221453_1_1",
+        "20260722/popsize100/ObstacleTraverser-v0T/MA+ES/ObstacleTraverser-v0T_MA_ES_100_07221510_1_1",
+        "20260722/popsize100/ObstacleTraverser-v0T/MA+ES/ObstacleTraverser-v0T_MA_ES_100_07221518_1_1",
+        "20260722/popsize100/ObstacleTraverser-v0T/MA+ES/ObstacleTraverser-v0T_MA_ES_100_07221501_1_1",
     ]
     
     for file in population_files_list:
