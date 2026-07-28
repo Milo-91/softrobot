@@ -3,7 +3,7 @@
 This repository uses [Evolution Gym](https://evolutiongym.github.io).
 It's a project in my short-term exchange period in University of Tsukuba.
 
-![](log/robust_compare.gif)
+[](log/robust_compare.gif)
 
 ## Files
 - `Search.py`: uses simple search algorithms to optimize the robot body 
@@ -39,5 +39,5 @@ originally!). Use `python Visualize -h` for options.
 - Install python dependencies (for evogym): `pip install glfw PyOpenGL ttkbootstrap` 
 - Install python dependencies (for this repo): `pip install pygifsicle imageio`
 
-## Report
-[[docs/The_begginner's_guide]]
+## Guide
+[The beginner's_guide](docs/The_beginner's_guide.md)
