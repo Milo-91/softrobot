@@ -40,3 +40,4 @@ originally!). Use `python Visualize -h` for options.
 - Install python dependencies (for this repo): `pip install pygifsicle imageio`
 
 ## Report
+[[docs/The_begginner's_guide]]
