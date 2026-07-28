@@ -1,19 +1,11 @@
-# Yet Another Soft Robot Evolver
+# Milo's Softrobot Project (adapted from [Yet Another Soft Robot Evolver](https://codeberg.org/caranha/YASRE))
 
-This repository uses [Evolution Gym](https://evolutiongym.github.io)
-as a base to play with evolutionary computation algorithms and other
-weirder things.
+This repository uses [Evolution Gym](https://evolutiongym.github.io).
+It's a project in my short-term exchange period in University of Tsukuba.
 
-![](log/20230627_ES_trial02/ES_2_248.gif)
-
-It can also be useful as a minimalist codebase to learn how to use
-evogym without having to worry about PPO and stuff.
+![](log/robust_compare.gif)
 
 ## Files
-- `test/`: contains a script to test if your Evogym installation is working
-
-- `docs/`: contains some documentation to learn about Evolutionary Computation
-
 - `Search.py`: uses simple search algorithms to optimize the robot body 
 for a given task. Random Search, GA and ES are implemented. Use `python 
 Search.py -h` for options.
@@ -22,13 +14,23 @@ Search.py -h` for options.
 world file (note: it does not need to be the same ones that ran together 
 originally!). Use `python Visualize -h` for options.
 
-- `robot/`: Contains objects implementing evolving robots.
+- `run.sh`: Used to run batch processes with one command. `$./run.sh`
 
-- `world/`: COntains objects implementing worlds and tasks.
+- `EC_algorithms/`: To store algorithms and functions used by algorithms.
 
-- `TODO.md`: hell.
+- `EC_algorithms/utils.py`: Functions used by algorithms.
 
-- `README.md`: guess.
+- `EC_algorithms/logger.py`: A object used for record information during the algorithm running.
+
+- `world/`: Objects define calculation method or start position for different task. The world json files store in evogym_world folder. sim_files include the world files in Evogym that not transform yet. T_world folder include the world files compatible with  YASRE.
+
+- `world/json_transformer.py`: A function can transform world in Evogym to a json file can be used in YASRE. 
+
+- `robot/`: Contain objects for robot.
+
+- `log/`: Store log files. You can change the path with `-d` option in Search.py.
+
+- `evaluation/evaluate.py`: Define evaluation method.  
 
 ## How to Install:
 - Create a local python 3.10 environment using pyenv or similar
@@ -37,5 +39,4 @@ originally!). Use `python Visualize -h` for options.
 - Install python dependencies (for evogym): `pip install glfw PyOpenGL ttkbootstrap` 
 - Install python dependencies (for this repo): `pip install pygifsicle imageio`
 
-## About
-- This repository was created by [Claus Aranha](https://conclave.cs.tsukuba.ac.jp)
+## Report
