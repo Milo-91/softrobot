@@ -3,7 +3,7 @@
 This repository uses [Evolution Gym](https://evolutiongym.github.io).
 It's a project in my short-term exchange period in University of Tsukuba.
 
-[](log/robust_compare.gif)
+![](log/robust_compare.gif)
 
 ## Files
 - `Search.py`: uses simple search algorithms to optimize the robot body 
