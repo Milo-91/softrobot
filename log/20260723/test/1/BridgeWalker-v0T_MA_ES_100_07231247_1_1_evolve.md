@@ -1,0 +1,7 @@
+- local search algorithm: ES
+- popsize: 100
+- evo_step: 2000
+- elites percentage: 0.1
+- rho: 1
+- tau: 1
+# Generation 0
