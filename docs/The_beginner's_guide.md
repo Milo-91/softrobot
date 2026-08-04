@@ -67,9 +67,9 @@ All parameters can be adjust in the `Search.py`.
 Below are the algorithms I studied.
 - [test]("Genetic Algorithm (GA).md")
 - [[Memetic Algorithm (MA)]]
-- [[Local Search]]
+- [](Local Search.md)
 ## Analysis methods
-- [[fitness analysis]]
+- [](fitness analysis.md)
 - [[simulation analysis]]
 - [[effect of local search analysis]]
 - [[population distribution analysis]]
