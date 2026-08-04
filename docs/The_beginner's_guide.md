@@ -65,7 +65,7 @@ The algorithms I designed is Genetic Algorithm (GA), Memetic Algorithm (MA), Evo
 All parameters can be adjust in the `Search.py`. 
 
 Below are the algorithms I studied.
-- [test]("Genetic Algorithm (GA).md")
+- [Genetic Algorithm](GeneticAlgorithm.md")
 - [[Memetic Algorithm (MA)]]
 - [](Local Search.md)
 ## Analysis methods
