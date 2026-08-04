@@ -65,14 +65,14 @@ The algorithms I designed is Genetic Algorithm (GA), Memetic Algorithm (MA), Evo
 All parameters can be adjust in the `Search.py`. 
 
 Below are the algorithms I studied.
-- [Genetic Algorithm](GeneticAlgorithm.md")
-- [[Memetic Algorithm (MA)]]
-- [](Local Search.md)
+- [Genetic Algorithm (GA)](GeneticAlgorithm.md")
+- [Memetic Algorithm (MA)](MemeticAlgorithm.md)
+- [Local Search](LocalSearch.md)
 ## Analysis methods
-- [](fitness analysis.md)
-- [[simulation analysis]]
-- [[effect of local search analysis]]
-- [[population distribution analysis]]
+- [fitness_analysis](fitness_analysis.md)
+- [simulatiry analysis](simularity_analysis.md)
+- [effect of local search analysis](effect_of_local_search_analysis.md)
+- [population distribution analysis](population_distribution_analysis.md)
 # References I read
 ## Books
 - **Introduction to Evolutionary Computing**: I read this book for understand basic concepts of Evolutionary Computing, I suggest to reading this before researching.
@@ -80,4 +80,4 @@ Below are the algorithms I studied.
 ## Papers
 - **Evolution gym: a large-scale benchmark for evolving soft robots**: Evogym paper.
 # My final presentation
-[[Tsukuba_final_presentation]]
+[final presentation](Tsukuba_final_presentation.md)
