@@ -43,6 +43,12 @@ def data_draw(csv_list, ax, color, label, x_axis, cal_conv=False):
     )
     if cal_conv:
         ax.scatter(conv_point, df['mean'][conv_point], color=color, marker='*', s=200, zorder=10)
+        ax.axvline(
+            x=conv_point,
+            color=color,
+            linestyle="--",
+            linewidth=1.5
+        )
 
 def import_from_folder(folder):
     best_robots = []
@@ -75,18 +81,19 @@ if __name__ == '__main__':
     
     # GA with pop shrink
     folders_list = [
-        # 'log/20260721/popsize100/ObstacleTraverser-v0T/ES/',
-        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA+Init_pop/',
-        # 'log/20260722/popsize100/ObstacleTraverser-v0T/MA+ES/',
-        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/MA+HC/',
-        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/GA/',
+        # 'log/Integrated_Experiments/popsize100/Climber-v0T/GA+Init_pop_HC/',
+        # 'log/Integrated_Experiments/popsize100/Climber-v0T/GA+Init_pop_ES/',
+        # 'log/Integrated_Experiments/popsize100/Climber-v0T/MA+HC/',
+        # 'log/Integrated_Experiments/popsize100/Climber-v0T/MA+ES/',
+        # 'log/Integrated_Experiments/popsize100/Climber-v0T/GA/',
         # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v0T/HC/',
 
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop/',
-        'log/20260722/popsize100/ObstacleTraverser-v1T/MA+ES/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop_HC/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA+Init_pop_ES/',
         'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/MA+HC/',
+        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/MA+ES/',
         'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/GA/',
-        'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/HC/',
+        # 'log/Integrated_Experiments/popsize100/ObstacleTraverser-v1T/HC/',
     ]
 
     count = len(folders_list)
